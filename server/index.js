@@ -31,7 +31,25 @@ initSocket(io)
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }))
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }))
+// CORS - allow all vercel deployments + local
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'https://medicapsmart.vercel.app',
+  'https://client-seven-orpin-32.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:5174',
+].filter(Boolean)
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true
+}))
 app.use(express.json())
 app.use(cookieParser())
 app.use(morgan('dev'))
