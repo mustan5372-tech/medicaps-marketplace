@@ -25,7 +25,14 @@ const server = http.createServer(app)
 
 // Socket.io
 const io = new Server(server, {
-  cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }
+  cors: {
+    origin: (origin, cb) => cb(null, true),
+    credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
 })
 initSocket(io)
 
