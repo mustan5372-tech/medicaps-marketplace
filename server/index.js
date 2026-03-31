@@ -1,0 +1,64 @@
+require('dotenv').config()
+// Force Google DNS to bypass ISP DNS blocking
+const dns = require('dns')
+dns.setDefaultResultOrder('ipv4first')
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1'])
+const express = require('express')
+const http = require('http')
+const { Server } = require('socket.io')
+const mongoose = require('mongoose')
+const cors = require('cors')
+const cookieParser = require('cookie-parser')
+const helmet = require('helmet')
+const morgan = require('morgan')
+const rateLimit = require('express-rate-limit')
+
+const authRoutes = require('./routes/auth')
+const listingRoutes = require('./routes/listings')
+const chatRoutes = require('./routes/chat')
+const userRoutes = require('./routes/users')
+const adminRoutes = require('./routes/admin')
+const { initSocket } = require('./socket')
+
+const app = express()
+const server = http.createServer(app)
+
+// Socket.io
+const io = new Server(server, {
+  cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }
+})
+initSocket(io)
+
+// Middleware
+app.use(helmet({ crossOriginResourcePolicy: false }))
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }))
+app.use(express.json())
+app.use(cookieParser())
+app.use(morgan('dev'))
+
+// Rate limiting
+app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many requests' }))
+
+// Routes
+app.use('/api/auth', authRoutes)
+app.use('/api/listings', listingRoutes)
+app.use('/api/chat', chatRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/admin', adminRoutes)
+
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')))
+app.get('/api/health', (_, res) => res.json({ status: 'ok' }))
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack)
+  res.status(err.status || 500).json({ message: err.message || 'Internal server error' })
+})
+
+// DB + Start
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('MongoDB connected')
+    server.listen(process.env.PORT || 5000, () => console.log(`Server running on port ${process.env.PORT || 5000}`))
+  })
+  .catch(err => { console.error('DB connection failed:', err); process.exit(1) })
