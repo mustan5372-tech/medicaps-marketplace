@@ -141,4 +141,19 @@ router.put('/profile', protect, async (req, res) => {
   }
 })
 
+// Upload avatar
+router.post('/avatar', protect, (req, res, next) => {
+  const { avatarUpload } = require('../middleware/upload')
+  avatarUpload.single('avatar')(req, res, next)
+}, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
+    const avatarUrl = req.file.secure_url || req.file.path
+    const user = await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl }, { new: true })
+    res.json({ user })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
 module.exports = router

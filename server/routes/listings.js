@@ -3,7 +3,7 @@ const Listing = require('../models/Listing')
 const Report = require('../models/Report')
 const User = require('../models/User')
 const { protect } = require('../middleware/auth')
-const upload = require('../middleware/upload')
+// upload imported inline per route
 
 // Get all listings with filters
 router.get('/', async (req, res) => {
@@ -56,10 +56,13 @@ router.get('/:id', async (req, res) => {
 })
 
 // Create listing
-router.post('/', protect, upload.array('images', 5), async (req, res) => {
+router.post('/', protect, (req, res, next) => {
+  const { listingUpload } = require('../middleware/upload')
+  listingUpload.array('images', 5)(req, res, next)
+}, async (req, res) => {
   try {
     const { title, description, price, category, condition, location } = req.body
-    const images = req.files?.map(f => `${process.env.SERVER_URL || 'http://localhost:5000'}/uploads/${f.filename}`) || []
+    const images = req.files?.map(f => f.secure_url || f.path) || []
     const listing = await Listing.create({ title, description, price: Number(price), category, condition, location, images, seller: req.user._id })
     await listing.populate('seller', 'name email')
     res.status(201).json({ listing })
