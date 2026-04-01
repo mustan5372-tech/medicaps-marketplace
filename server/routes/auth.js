@@ -7,13 +7,6 @@ const { protect } = require('../middleware/auth')
 
 const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' })
 
-const setCookie = (res, token) => res.cookie('token', token, {
-  httpOnly: true,
-  secure: true,
-  sameSite: 'none',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-})
-
 // Register
 router.post('/register', async (req, res) => {
   try {
@@ -22,44 +15,62 @@ router.post('/register', async (req, res) => {
 
     const allowed = ['@medicaps.ac.in', '@mcu.ac.in']
     const isProd = process.env.NODE_ENV === 'production'
-    if (isProd && !allowed.some(d => email.endsWith(d))) return res.status(400).json({ message: 'Use your MediCaps college email' })
+    if (isProd && !allowed.some(d => email.endsWith(d))) {
+      return res.status(400).json({ message: 'Use your MediCaps college email (@medicaps.ac.in)' })
+    }
 
     if (await User.findOne({ email })) return res.status(400).json({ message: 'Email already registered' })
 
-    const verifyToken = crypto.randomBytes(32).toString('hex')
-    // In dev without email config, auto-verify
     const isEmailConfigured = process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your@gmail.com'
-    const user = await User.create({
+    const verifyToken = crypto.randomBytes(32).toString('hex')
+
+    await User.create({
       name, email, password, verifyToken,
       verifyTokenExpiry: Date.now() + 24 * 60 * 60 * 1000,
-      isVerified: !isEmailConfigured, // auto-verify if email not configured
+      isVerified: !isEmailConfigured,
     })
 
     if (isEmailConfigured) {
       await sendVerificationEmail(email, verifyToken)
-      res.status(201).json({ message: 'Account created. Check your email to verify.' })
-    } else {
-      res.status(201).json({ message: 'Account created. You can now login.' })
+      return res.status(201).json({ message: 'Account created. Check your email to verify.' })
     }
+    res.status(201).json({ message: 'Account created. You can now login.' })
   } catch (err) {
+    console.error('Register error:', err)
     res.status(500).json({ message: err.message })
   }
 })
 
-// Login
+// Login - returns token in response body (not cookie)
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
+    if (!email || !password) return res.status(400).json({ message: 'Email and password required' })
+
     const user = await User.findOne({ email })
-    if (!user || !(await user.comparePassword(password))) return res.status(401).json({ message: 'Invalid credentials' })
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ message: 'Invalid email or password' })
+    }
+
     const isEmailConfigured = process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your@gmail.com'
-    if (isEmailConfigured && !user.isVerified) return res.status(401).json({ message: 'Please verify your email first' })
-    if (user.banned) return res.status(403).json({ message: 'Account banned' })
+    if (isEmailConfigured && !user.isVerified) {
+      return res.status(401).json({ message: 'Please verify your email first' })
+    }
+    if (user.banned) return res.status(403).json({ message: 'Your account has been banned' })
 
     const token = signToken(user._id)
-    setCookie(res, token)
-    res.json({ user })
+
+    // Send token in both cookie AND response body for cross-origin compatibility
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+
+    res.json({ user, token })
   } catch (err) {
+    console.error('Login error:', err)
     res.status(500).json({ message: err.message })
   }
 })
