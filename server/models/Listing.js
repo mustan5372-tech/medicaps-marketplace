@@ -10,11 +10,12 @@ const listingSchema = new mongoose.Schema({
   seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   location: { type: String, required: true },
   savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  status: { type: String, enum: ['active', 'sold', 'deleted'], default: 'active' },
   isActive: { type: Boolean, default: true },
   views: { type: Number, default: 0 },
 }, { timestamps: true })
 
 listingSchema.index({ title: 'text', description: 'text' })
-listingSchema.index({ category: 1, condition: 1, price: 1 })
+listingSchema.index({ category: 1, condition: 1, price: 1, status: 1 })
 
 module.exports = mongoose.model('Listing', listingSchema)

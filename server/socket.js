@@ -1,7 +1,8 @@
 const Message = require('./models/Message')
 const Conversation = require('./models/Conversation')
+const Listing = require('./models/Listing')
 
-const onlineUsers = new Map() // userId -> socketId
+const onlineUsers = new Map()
 
 function initSocket(io) {
   io.on('connection', (socket) => {
@@ -11,60 +12,54 @@ function initSocket(io) {
       io.emit('onlineUsers', Array.from(onlineUsers.keys()))
     }
 
-    // Join a chat room by chatId (buyerId_sellerId_listingId)
-    socket.on('join_chat', ({ chatId }) => {
-      socket.join(chatId)
-    })
+    socket.on('join_chat', ({ chatId }) => socket.join(chatId))
+    socket.on('joinConversation', (id) => socket.join(id))
 
-    // Send message
-    socket.on('send_message', async ({ chatId, conversationId, encryptedText, iv, receiverId }) => {
+    socket.on('send_message', async ({ chatId, conversationId, encryptedText, iv, receiverId, listingId }) => {
       try {
+        // Validate listing status before allowing message
+        if (listingId) {
+          const listing = await Listing.findById(listingId).select('status')
+          if (listing && listing.status === 'sold') {
+            return socket.emit('chat_error', { message: 'Chat is closed — this item has been sold.' })
+          }
+          if (listing && listing.status === 'deleted') {
+            return socket.emit('chat_error', { message: 'This listing no longer exists.' })
+          }
+        }
+
         const message = await Message.create({
           chatId,
           conversation: conversationId,
+          listing: listingId || null,
           sender: userId,
           receiver: receiverId,
           encryptedText,
           iv,
         })
 
-        await Conversation.findByIdAndUpdate(conversationId, {
-          lastMessage: message._id,
-          updatedAt: new Date(),
-        })
+        await Conversation.findByIdAndUpdate(conversationId, { lastMessage: message._id, updatedAt: new Date() })
 
         const populated = await message.populate('sender', 'name')
         const payload = { ...populated.toObject(), conversationId, chatId }
 
-        // Emit to entire chat room (both users)
         io.to(chatId).emit('receive_message', payload)
-
-        // Also emit directly to receiver socket if not in room
         const receiverSocket = onlineUsers.get(receiverId)
-        if (receiverSocket) {
-          io.to(receiverSocket).emit('receive_message', payload)
-        }
+        if (receiverSocket) io.to(receiverSocket).emit('receive_message', payload)
       } catch (err) {
         console.error('Socket send_message error:', err)
+        socket.emit('chat_error', { message: 'Failed to send message' })
       }
     })
 
-    // Typing indicators
     socket.on('typing', ({ chatId, isTyping }) => {
       socket.to(chatId).emit('typing', { userId, isTyping })
     })
 
-    // Legacy sendMessage support
+    // Legacy support
     socket.on('sendMessage', async ({ conversationId, encryptedText, iv, receiverId }) => {
       try {
-        const message = await Message.create({
-          chatId: conversationId,
-          conversation: conversationId,
-          sender: userId,
-          receiver: receiverId,
-          encryptedText,
-          iv,
-        })
+        const message = await Message.create({ chatId: conversationId, conversation: conversationId, sender: userId, receiver: receiverId, encryptedText, iv })
         await Conversation.findByIdAndUpdate(conversationId, { lastMessage: message._id, updatedAt: new Date() })
         const populated = await message.populate('sender', 'name')
         const payload = { ...populated.toObject(), conversationId }
@@ -72,11 +67,9 @@ function initSocket(io) {
         if (receiverSocket) io.to(receiverSocket).emit('newMessage', payload)
         socket.emit('newMessage', payload)
       } catch (err) {
-        console.error('Socket sendMessage error:', err)
+        console.error('sendMessage error:', err)
       }
     })
-
-    socket.on('joinConversation', (conversationId) => socket.join(conversationId))
 
     socket.on('disconnect', () => {
       onlineUsers.delete(userId)

@@ -1,8 +1,9 @@
 const mongoose = require('mongoose')
 
 const messageSchema = new mongoose.Schema({
-  chatId: { type: String, required: true, index: true }, // buyerId_sellerId_listingId
+  chatId: { type: String, required: true, index: true },
   conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
+  listing: { type: mongoose.Schema.Types.ObjectId, ref: 'Listing' },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   encryptedText: { type: String, required: true },

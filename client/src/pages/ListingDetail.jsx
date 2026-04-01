@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/authStore'
 import { useChatStore } from '../store/chatStore'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
-import { FiMapPin, FiClock, FiMessageSquare, FiHeart, FiFlag, FiEdit, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { FiMapPin, FiClock, FiMessageSquare, FiHeart, FiFlag, FiEdit, FiTrash2, FiChevronLeft, FiChevronRight, FiCheckCircle } from 'react-icons/fi'
 import api from '../utils/api'
 
 import AnimatedPage from '../components/AnimatedPage'
@@ -102,7 +102,10 @@ export default function ListingDetail() {
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{listing.title}</h1>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              {listing.status === 'sold' && (
+                <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full text-sm font-bold">SOLD</span>
+              )}
               <button onClick={handleSave} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-red-400 transition">
                 <FiHeart className={`w-5 h-5 ${saved ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} />
               </button>
@@ -140,13 +143,27 @@ export default function ListingDetail() {
           </div>
 
           {isOwner ? (
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
+              {listing.status !== 'sold' && (
+                <motion.button whileTap={{ scale: 0.97 }} onClick={async () => {
+                  if (!confirm('Mark this item as sold?')) return
+                  await api.patch(`/listings/${listing._id}/mark-sold`)
+                  toast.success('Marked as sold!')
+                  fetchListing(listing._id)
+                }} className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition">
+                  <FiCheckCircle className="w-4 h-4" /> Mark as Sold
+                </motion.button>
+              )}
               <Link to={`/edit-listing/${listing._id}`} className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition">
                 <FiEdit className="w-4 h-4" /> Edit
               </Link>
               <button onClick={handleDelete} className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 text-red-600 rounded-xl font-medium transition">
                 <FiTrash2 className="w-4 h-4" /> Delete
               </button>
+            </div>
+          ) : listing.status === 'sold' ? (
+            <div className="w-full flex items-center justify-center gap-2 py-3 bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-xl font-semibold">
+              <FiCheckCircle className="w-5 h-5" /> This item has been sold
             </div>
           ) : (
             <motion.button whileTap={{ scale: 0.97 }} onClick={handleContact}

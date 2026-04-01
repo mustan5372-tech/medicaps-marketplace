@@ -1,15 +1,16 @@
 const router = require('express').Router()
 const Listing = require('../models/Listing')
 const Report = require('../models/Report')
+const Message = require('../models/Message')
+const Conversation = require('../models/Conversation')
 const User = require('../models/User')
 const { protect } = require('../middleware/auth')
-// upload imported inline per route
 
 // Get all listings with filters
 router.get('/', async (req, res) => {
   try {
     const { search, category, condition, minPrice, maxPrice, sort, page = 1, limit = 12, seller } = req.query
-    const query = { isActive: true }
+    const query = { isActive: true, status: { $ne: 'deleted' } }
 
     if (search) query.$text = { $search: search }
     if (category) query.category = category
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
     const sortObj = sortMap[sort] || { createdAt: -1 }
 
     const [listings, total] = await Promise.all([
-      Listing.find(query).sort(sortObj).skip((page - 1) * limit).limit(Number(limit)).populate('seller', 'name email'),
+      Listing.find(query).sort(sortObj).skip((page - 1) * limit).limit(Number(limit)).populate('seller', 'name email avatar'),
       Listing.countDocuments(query),
     ])
     res.json({ listings, total })
@@ -37,8 +38,8 @@ router.get('/', async (req, res) => {
 // Get saved listings
 router.get('/saved', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate({ path: 'savedListings', populate: { path: 'seller', select: 'name' } })
-    res.json({ listings: user.savedListings })
+    const user = await User.findById(req.user._id).populate({ path: 'savedListings', populate: { path: 'seller', select: 'name avatar' } })
+    res.json({ listings: user.savedListings || [] })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -47,7 +48,7 @@ router.get('/saved', protect, async (req, res) => {
 // Get single listing
 router.get('/:id', async (req, res) => {
   try {
-    const listing = await Listing.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true }).populate('seller', 'name email')
+    const listing = await Listing.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true }).populate('seller', 'name email avatar')
     if (!listing) return res.status(404).json({ message: 'Listing not found' })
     res.json({ listing })
   } catch (err) {
@@ -67,7 +68,7 @@ router.post('/', protect, (req, res, next) => {
       (req.files || []).map(f => uploadImage(f.buffer, f.mimetype, 'listings'))
     )
     const listing = await Listing.create({ title, description, price: Number(price), category, condition, location, images, seller: req.user._id })
-    await listing.populate('seller', 'name email')
+    await listing.populate('seller', 'name email avatar')
     res.status(201).json({ listing })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -80,19 +81,40 @@ router.put('/:id', protect, async (req, res) => {
     const listing = await Listing.findById(req.params.id)
     if (!listing) return res.status(404).json({ message: 'Not found' })
     if (listing.seller.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' })
-    const updated = await Listing.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('seller', 'name email')
+    const updated = await Listing.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('seller', 'name email avatar')
     res.json({ listing: updated })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
 })
 
-// Delete listing
+// Mark as SOLD
+router.patch('/:id/mark-sold', protect, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id)
+    if (!listing) return res.status(404).json({ message: 'Not found' })
+    if (listing.seller.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' })
+    listing.status = 'sold'
+    listing.isActive = false
+    await listing.save()
+    res.json({ listing, message: 'Listing marked as sold' })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// Delete listing — also deletes all associated chats
 router.delete('/:id', protect, async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id)
     if (!listing) return res.status(404).json({ message: 'Not found' })
-    if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') return res.status(403).json({ message: 'Not authorized' })
+    if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' })
+    }
+    // Delete all messages and conversations tied to this listing
+    const chatIdPattern = `_${req.params.id}`
+    await Message.deleteMany({ $or: [{ listing: req.params.id }, { chatId: { $regex: chatIdPattern } }] })
+    await Conversation.deleteMany({ listing: req.params.id })
     await listing.deleteOne()
     res.json({ message: 'Deleted' })
   } catch (err) {
