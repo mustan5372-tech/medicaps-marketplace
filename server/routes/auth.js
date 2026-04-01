@@ -141,16 +141,18 @@ router.put('/profile', protect, async (req, res) => {
   }
 })
 
-// Upload avatar
-router.post('/avatar', protect, (req, res, next) => {
-  const { avatarUpload } = require('../middleware/upload')
-  avatarUpload.single('avatar')(req, res, next)
-}, async (req, res) => {
+// Upload avatar - stores as base64 in MongoDB (no Cloudinary needed)
+router.post('/avatar', protect, async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
-    const avatarUrl = req.file.secure_url || req.file.path
-    const user = await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl }, { new: true })
-    res.json({ user })
+    const multer = require('multer')
+    const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } })
+    upload.single('avatar')(req, res, async (err) => {
+      if (err) return res.status(400).json({ message: err.message })
+      if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
+      const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
+      const user = await User.findByIdAndUpdate(req.user._id, { avatar: base64 }, { new: true })
+      res.json({ user })
+    })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
