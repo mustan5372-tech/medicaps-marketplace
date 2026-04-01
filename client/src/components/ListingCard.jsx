@@ -101,6 +101,11 @@ export default function ListingCard({ listing }) {
                 <FiClock className="w-3 h-3" />
                 <span>{formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })}</span>
               </div>
+              {listing.views > 0 && (
+                <span className="flex items-center gap-0.5 text-xs text-gray-400 ml-1">
+                  <FiEye className="w-3 h-3" />{listing.views}
+                </span>
+              )}
             </div>
           </div>
         </Link>

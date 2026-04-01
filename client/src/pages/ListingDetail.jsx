@@ -6,12 +6,13 @@ import { useAuthStore } from '../store/authStore'
 import { useChatStore } from '../store/chatStore'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
-import { FiMapPin, FiClock, FiMessageSquare, FiHeart, FiFlag, FiEdit, FiTrash2, FiChevronLeft, FiChevronRight, FiCheckCircle, FiShare2, FiCopy } from 'react-icons/fi'
+import { FiMapPin, FiClock, FiMessageSquare, FiHeart, FiFlag, FiEdit, FiTrash2, FiChevronLeft, FiChevronRight, FiCheckCircle, FiShare2, FiCopy, FiEye } from 'react-icons/fi'
 import { FaWhatsapp } from 'react-icons/fa'
 import api from '../utils/api'
 import AnimatedPage from '../components/AnimatedPage'
 import { analytics } from '../utils/analytics'
 import ListingCard from '../components/ListingCard'
+import StarRating from '../components/StarRating'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -163,6 +164,7 @@ export default function ListingDetail() {
           <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1"><FiMapPin className="w-4 h-4" />{listing.location}</span>
             <span className="flex items-center gap-1"><FiClock className="w-4 h-4" />{formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })}</span>
+            {listing.views > 0 && <span className="flex items-center gap-1 text-blue-500"><FiEye className="w-4 h-4" />{listing.views} views</span>}
           </div>
 
           {/* Seller */}
@@ -173,8 +175,19 @@ export default function ListingDetail() {
                 : listing.seller?.name?.[0]?.toUpperCase()
               }
             </div>
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">{listing.seller?.name}</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5">
+                <p className="font-medium text-gray-900 dark:text-white">{listing.seller?.name}</p>
+                {listing.seller?.isSellerVerified && (
+                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-1.5 py-0.5 rounded-full">✓ Verified</span>
+                )}
+              </div>
+              {listing.seller?.rating > 0 && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <StarRating value={Math.round(listing.seller.rating)} readonly size="sm" />
+                  <span className="text-xs text-gray-500">{listing.seller.rating.toFixed(1)} ({listing.seller.ratingCount})</span>
+                </div>
+              )}
               <Link to={`/profile/${listing.seller?._id}`} className="text-xs text-blue-600 hover:underline">View profile</Link>
             </div>
           </div>
