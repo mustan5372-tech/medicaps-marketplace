@@ -60,7 +60,13 @@ export default function ListingCard({ listing }) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-            {/* Action buttons */}
+            {/* Watermark */}
+          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <img src="/logo.png" alt="" className="w-3.5 h-3.5 object-contain" />
+            <span className="text-white text-[10px] font-medium">MediCaps</span>
+          </div>
+
+          {/* Action buttons */}
             <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
               <motion.button onClick={toggleSave} whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.85 }}
                 className="p-2 rounded-xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-lg">

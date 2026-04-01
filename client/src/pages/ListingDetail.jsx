@@ -73,6 +73,11 @@ export default function ListingDetail() {
           <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
             <img src={images[imgIdx]} alt={listing.title} className="w-full h-full object-cover"
               onError={e => { e.target.src = 'https://placehold.co/600x400/e2e8f0/94a3b8?text=No+Image' }} />
+            {/* Watermark */}
+            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-xl">
+              <img src="/logo.png" alt="" className="w-4 h-4 object-contain" />
+              <span className="text-white text-xs font-semibold">MediCaps Market</span>
+            </div>
             {images.length > 1 && (
               <>
                 <button onClick={() => setImgIdx((imgIdx - 1 + images.length) % images.length)}
