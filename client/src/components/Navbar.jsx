@@ -43,7 +43,7 @@ export default function Navbar() {
       className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-sm' : 'bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800'}`}>
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src="/logo.png" alt="MediCaps Market" className="w-8 h-8 object-contain" />
+          <img src="/logo.png" alt="MediCaps Market" className="w-10 h-10 object-contain mix-blend-screen dark:mix-blend-screen" style={{ filter: 'brightness(1.1) contrast(1.1)' }} />
           <span className="font-bold text-gray-900 dark:text-white hidden sm:block text-sm">MediCaps<span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Market</span></span>
         </Link>
 
