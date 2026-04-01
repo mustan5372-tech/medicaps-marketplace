@@ -22,6 +22,8 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
 
+import FloatingPostButton from './components/FloatingPostButton'
+
 function AnimatedRoutes() {
   const location = useLocation()
   return (
@@ -69,6 +71,7 @@ export default function App() {
           style: { borderRadius: '12px', background: dark ? '#1f2937' : '#fff', color: dark ? '#f9fafb' : '#111827' }
         }} />
         <AnimatedRoutes />
+        <FloatingPostButton />
       </BrowserRouter>
     </div>
   )
