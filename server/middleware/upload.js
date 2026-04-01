@@ -1,47 +1,44 @@
 const multer = require('multer')
-const cloudinary = require('cloudinary').v2
-const { CloudinaryStorage } = require('multer-storage-cloudinary')
 const path = require('path')
-const fs = require('fs')
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
-
-const isCloudinaryConfigured = () =>
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_CLOUD_NAME !== 'medicapsmart' &&
-  process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name'
-
-const getStorage = (folder) => {
-  if (isCloudinaryConfigured()) {
-    return new CloudinaryStorage({
-      cloudinary,
-      params: {
-        folder: `medicaps/${folder}`,
-        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-        transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto:good' }],
-      },
-    })
-  }
-  // Local fallback
-  const uploadDir = path.join(__dirname, `../uploads/${folder}`)
-  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
-  return multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`),
-  })
-}
+// Always use memory storage - we'll handle upload manually
+const storage = multer.memoryStorage()
 
 const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|webp/
-  cb(null, allowed.test(path.extname(file.originalname).toLowerCase()))
+  const allowed = /jpeg|jpg|png|webp/i
+  if (allowed.test(path.extname(file.originalname))) cb(null, true)
+  else cb(new Error('Only images allowed'), false)
 }
 
-module.exports = {
-  listingUpload: multer({ storage: getStorage('listings'), limits: { fileSize: 5 * 1024 * 1024 }, fileFilter }),
-  avatarUpload: multer({ storage: getStorage('avatars'), limits: { fileSize: 2 * 1024 * 1024 }, fileFilter }),
-  isCloudinaryConfigured,
+const listingUpload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter })
+const avatarUpload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 }, fileFilter })
+
+// Upload to Cloudinary if configured, else return base64
+async function uploadImage(buffer, mimetype, folder = 'listings') {
+  const isConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_CLOUD_NAME !== 'medicapsmart' &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_KEY !== 'placeholder'
+
+  if (isConfigured) {
+    const cloudinary = require('cloudinary').v2
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    })
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: `medicaps/${folder}`, transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto:good' }] },
+        (err, result) => err ? reject(err) : resolve(result.secure_url)
+      )
+      const { Readable } = require('stream')
+      Readable.from(buffer).pipe(stream)
+    })
+  }
+
+  // Fallback: base64 data URL (works without Cloudinary)
+  return `data:${mimetype};base64,${buffer.toString('base64')}`
 }
+
+module.exports = { listingUpload, avatarUpload, uploadImage }

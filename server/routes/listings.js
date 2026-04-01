@@ -62,7 +62,10 @@ router.post('/', protect, (req, res, next) => {
 }, async (req, res) => {
   try {
     const { title, description, price, category, condition, location } = req.body
-    const images = req.files?.map(f => f.secure_url || f.path) || []
+    const { uploadImage } = require('../middleware/upload')
+    const images = await Promise.all(
+      (req.files || []).map(f => uploadImage(f.buffer, f.mimetype, 'listings'))
+    )
     const listing = await Listing.create({ title, description, price: Number(price), category, condition, location, images, seller: req.user._id })
     await listing.populate('seller', 'name email')
     res.status(201).json({ listing })

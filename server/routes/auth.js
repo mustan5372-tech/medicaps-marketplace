@@ -141,16 +141,17 @@ router.put('/profile', protect, async (req, res) => {
   }
 })
 
-// Upload avatar - stores as base64 in MongoDB (no Cloudinary needed)
+// Upload avatar - stores as base64 or Cloudinary
 router.post('/avatar', protect, async (req, res) => {
   try {
     const multer = require('multer')
+    const { uploadImage } = require('../middleware/upload')
     const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } })
     upload.single('avatar')(req, res, async (err) => {
       if (err) return res.status(400).json({ message: err.message })
       if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
-      const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
-      const user = await User.findByIdAndUpdate(req.user._id, { avatar: base64 }, { new: true })
+      const avatarUrl = await uploadImage(req.file.buffer, req.file.mimetype, 'avatars')
+      const user = await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl }, { new: true })
       res.json({ user })
     })
   } catch (err) {
