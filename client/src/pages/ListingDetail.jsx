@@ -8,7 +8,7 @@ import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 import { FiMapPin, FiClock, FiMessageSquare, FiHeart, FiFlag, FiEdit, FiTrash2, FiChevronLeft, FiChevronRight, FiCheckCircle } from 'react-icons/fi'
 import api from '../utils/api'
-
+import AnimatedPage from '../components/AnimatedPage'
 import { analytics } from '../utils/analytics'
 
 export default function ListingDetail() {
@@ -24,9 +24,11 @@ export default function ListingDetail() {
 
   useEffect(() => { fetchListing(id) }, [id])
   useEffect(() => {
-    if (listing) analytics.viewListing(listing._id, listing.title, listing.price)
+    if (listing) {
+      setSaved(listing.savedBy?.includes(user?._id))
+      analytics.viewListing(listing._id, listing.title, listing.price)
+    }
   }, [listing])
-  useEffect(() => { if (listing) setSaved(listing.savedBy?.includes(user?._id)) }, [listing])
 
   const handleContact = async () => {
     if (!user) { toast.error('Login to contact seller'); return }
@@ -65,7 +67,9 @@ export default function ListingDetail() {
     </div>
   )
 
-  const images = listing.images?.length ? listing.images : [`https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(listing.category || 'Item')}`]
+  const images = listing.images?.length
+    ? listing.images
+    : [`https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(listing.category || 'Item')}`]
   const isOwner = user?._id === listing.seller?._id
 
   return (
@@ -78,7 +82,7 @@ export default function ListingDetail() {
               onError={e => { e.target.src = 'https://placehold.co/600x400/e2e8f0/94a3b8?text=No+Image' }} />
             {/* Watermark */}
             <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-xl">
-              <img src="/logo.png" alt="" className="w-4 h-4 object-contain" />
+              <img src="/logo.png" alt="" className="w-4 h-4 object-contain mix-blend-screen" />
               <span className="text-white text-xs font-semibold">MediCaps Market</span>
             </div>
             {images.length > 1 && (
@@ -141,8 +145,11 @@ export default function ListingDetail() {
 
           {/* Seller */}
           <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-              {listing.seller?.name?.[0]?.toUpperCase()}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden">
+              {listing.seller?.avatar
+                ? <img src={listing.seller.avatar} alt="" className="w-full h-full object-cover" />
+                : listing.seller?.name?.[0]?.toUpperCase()
+              }
             </div>
             <div>
               <p className="font-medium text-gray-900 dark:text-white">{listing.seller?.name}</p>
