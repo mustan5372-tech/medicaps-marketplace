@@ -62,17 +62,22 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={ref}>
       <motion.button
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.88 }}
         onClick={() => setOpen(!open)}
         className="relative p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"
       >
-        <FiBell className="w-5 h-5" />
+        <motion.div animate={unreadCount > 0 ? { rotate: [0, -15, 15, -10, 10, 0] } : {}}
+          transition={{ duration: 0.5, delay: 0.2 }}>
+          <FiBell className="w-5 h-5" />
+        </motion.div>
         <AnimatePresence>
           {unreadCount > 0 && (
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
