@@ -62,12 +62,19 @@ router.post('/', protect, (req, res, next) => {
   listingUpload.array('images', 5)(req, res, next)
 }, async (req, res) => {
   try {
-    const { title, description, price, category, condition, location } = req.body
+    const { title, description, price, category, condition, location, negotiable } = req.body
     const { uploadImage } = require('../middleware/upload')
     const images = await Promise.all(
       (req.files || []).map(f => uploadImage(f.buffer, f.mimetype, 'listings'))
     )
-    const listing = await Listing.create({ title, description, price: Number(price), category, condition, location, images, seller: req.user._id })
+    const listing = await Listing.create({
+      title, description,
+      price: Number(price),
+      category, condition, location,
+      negotiable: negotiable === 'true' || negotiable === true,
+      images,
+      seller: req.user._id
+    })
     await listing.populate('seller', 'name email avatar')
     res.status(201).json({ listing })
   } catch (err) {
