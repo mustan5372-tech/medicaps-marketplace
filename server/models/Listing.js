@@ -10,6 +10,7 @@ const listingSchema = new mongoose.Schema({
   seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   location: { type: String, required: true },
   savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  negotiable: { type: Boolean, default: false },
   status: { type: String, enum: ['active', 'sold', 'deleted'], default: 'active' },
   isActive: { type: Boolean, default: true },
   views: { type: Number, default: 0 },

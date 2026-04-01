@@ -9,7 +9,8 @@ import FilterSidebar from '../components/FilterSidebar'
 import AnimatedPage from '../components/AnimatedPage'
 import { staggerContainer, fadeUp } from '../utils/animations'
 import { trackEvent } from '../utils/analytics'
-import { FiFilter, FiPlus, FiTrendingUp, FiBook, FiMonitor, FiHome, FiTruck, FiShoppingBag, FiUsers, FiZap } from 'react-icons/fi'
+import { FiFilter, FiPlus, FiTrendingUp, FiBook, FiMonitor, FiHome, FiTruck, FiShoppingBag, FiUsers, FiZap, FiClock } from 'react-icons/fi'
+import api from '../utils/api'
 
 const CATEGORIES = [
   { label: 'All', icon: FiShoppingBag },
@@ -26,9 +27,21 @@ export default function Home() {
   const { listings, loading, total, page, filters, fetchListings, setFilters, setPage } = useListingStore()
   const { user } = useAuthStore()
   const [showFilter, setShowFilter] = useState(false)
+  const [recentlyViewed, setRecentlyViewed] = useState([])
   const totalPages = Math.ceil(total / 12)
 
   useEffect(() => { fetchListings() }, [filters, page])
+
+  useEffect(() => {
+    // Load recently viewed listings
+    try {
+      const ids = JSON.parse(localStorage.getItem('recentlyViewed') || '[]')
+      if (ids.length > 0) {
+        Promise.all(ids.slice(0, 4).map(id => api.get(`/listings/${id}`).then(r => r.data.listing).catch(() => null)))
+          .then(results => setRecentlyViewed(results.filter(Boolean)))
+      }
+    } catch {}
+  }, [])
 
   return (
     <AnimatedPage>
@@ -110,6 +123,19 @@ export default function Home() {
             </motion.div>
           </div>
         </div>
+
+        {/* Recently Viewed */}
+        {recentlyViewed.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <FiClock className="w-4 h-4 text-gray-500" />
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recently Viewed</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {recentlyViewed.map(l => <ListingCard key={l._id} listing={l} />)}
+            </div>
+          </div>
+        )}
 
         {/* Category pills */}
         <motion.div variants={staggerContainer(0.05, 0.1)} initial="hidden" animate="show"

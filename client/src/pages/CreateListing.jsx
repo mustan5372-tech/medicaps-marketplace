@@ -2,32 +2,44 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useDropzone } from 'react-dropzone'
-import { useListingStore } from '../store/listingStore'
 import toast from 'react-hot-toast'
-import { FiUpload, FiX } from 'react-icons/fi'
+import { FiUpload, FiX, FiLoader } from 'react-icons/fi'
 import api from '../utils/api'
+import AnimatedPage from '../components/AnimatedPage'
+import { compressImage } from '../utils/imageCompress'
+import { analytics } from '../utils/analytics'
 
 const CATEGORIES = ['Books', 'Electronics', 'Furniture', 'Vehicles', 'Clothing', 'Sports', 'Others']
 const CONDITIONS = ['New', 'Like New', 'Used']
 const LOCATIONS = ['Boys Hostel', 'Girls Hostel', 'Main Block', 'Library', 'Canteen Area', 'Sports Ground', 'Other']
 
-import AnimatedPage from '../components/AnimatedPage'
-
 export default function CreateListing() {
   const navigate = useNavigate()
-  const { createListing } = useListingStore()
   const [loading, setLoading] = useState(false)
+  const [compressing, setCompressing] = useState(false)
   const [images, setImages] = useState([])
   const [previews, setPreviews] = useState([])
-  const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Books', condition: 'Used', location: 'Main Block' })
+  const [form, setForm] = useState({
+    title: '', description: '', price: '',
+    category: 'Books', condition: 'Used',
+    location: 'Main Block', negotiable: false
+  })
 
-  const onDrop = useCallback((files) => {
+  const onDrop = useCallback(async (files) => {
     const newFiles = files.slice(0, 5 - images.length)
-    setImages(prev => [...prev, ...newFiles])
-    setPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))])
+    setCompressing(true)
+    try {
+      const compressed = await Promise.all(newFiles.map(f => compressImage(f)))
+      setImages(prev => [...prev, ...compressed])
+      setPreviews(prev => [...prev, ...compressed.map(f => URL.createObjectURL(f))])
+    } finally {
+      setCompressing(false)
+    }
   }, [images])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, maxFiles: 5 })
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop, accept: { 'image/*': [] }, maxFiles: 5
+  })
 
   const removeImage = (i) => {
     setImages(prev => prev.filter((_, idx) => idx !== i))
@@ -43,7 +55,8 @@ export default function CreateListing() {
       Object.entries(form).forEach(([k, v]) => formData.append(k, v))
       images.forEach(img => formData.append('images', img))
       const res = await api.post('/listings', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-      toast.success('Listing created!')
+      analytics.postListing(form.category, form.price)
+      toast.success('Listing posted!')
       navigate(`/listing/${res.data.listing._id}`)
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create listing')
@@ -54,13 +67,18 @@ export default function CreateListing() {
     <AnimatedPage className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Post a Listing</h1>
       <form onSubmit={handleSubmit} className="space-y-5">
+
         {/* Image Upload */}
         <div>
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Photos (up to 5)</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+            Photos (up to 5) <span className="text-gray-400 font-normal">— auto compressed</span>
+          </label>
           <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition ${isDragActive ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/10' : 'border-gray-300 dark:border-gray-700 hover:border-blue-400'}`}>
             <input {...getInputProps()} />
-            <FiUpload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Drag & drop or click to upload</p>
+            {compressing
+              ? <div className="flex items-center justify-center gap-2 text-blue-500"><FiLoader className="w-5 h-5 animate-spin" /> Compressing...</div>
+              : <><FiUpload className="w-8 h-8 text-gray-400 mx-auto mb-2" /><p className="text-sm text-gray-500 dark:text-gray-400">Drag & drop or click to upload</p></>
+            }
           </div>
           {previews.length > 0 && (
             <div className="flex gap-3 mt-3 flex-wrap">
@@ -78,34 +96,42 @@ export default function CreateListing() {
 
         <div>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Title</label>
-          <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Engineering Mathematics Book"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition" />
+          <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+            placeholder="e.g. Engineering Mathematics Book" className="input" />
         </div>
 
         <div>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Description</label>
-          <textarea required rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Describe your item..."
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition resize-none" />
+          <textarea required rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+            placeholder="Describe your item..." className="input resize-none" />
         </div>
 
+        {/* Price + Negotiable */}
         <div>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Price (₹)</label>
-          <input type="number" required min={0} value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="0"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition" />
+          <div className="flex gap-3 items-center">
+            <input type="number" required min={0} value={form.price} onChange={e => setForm({ ...form, price: e.target.value })}
+              placeholder="0" className="input flex-1" />
+            <label className="flex items-center gap-2 cursor-pointer shrink-0 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-400 transition">
+              <div className={`w-10 h-5 rounded-full transition-colors relative ${form.negotiable ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                onClick={() => setForm({ ...form, negotiable: !form.negotiable })}>
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.negotiable ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Negotiable</span>
+            </label>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Category</label>
-            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition">
+            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="input">
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Condition</label>
-            <select value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition">
+            <select value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })} className="input">
               {CONDITIONS.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
@@ -113,14 +139,13 @@ export default function CreateListing() {
 
         <div>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Location on Campus</label>
-          <select value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition">
+          <select value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} className="input">
             {LOCATIONS.map(l => <option key={l}>{l}</option>)}
           </select>
         </div>
 
-        <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={loading}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl transition">
+        <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={loading || compressing}
+          className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/25">
           {loading ? 'Posting...' : 'Post Listing'}
         </motion.button>
       </form>
