@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import { useThemeStore } from '../store/themeStore'
 import { useListingStore } from '../store/listingStore'
 import { FiSearch, FiSun, FiMoon, FiPlus, FiMessageSquare, FiHeart, FiUser, FiLogOut, FiShield, FiMenu, FiX } from 'react-icons/fi'
+import SearchBar from './SearchBar'
 
 export default function Navbar() {
   const { user, logout } = useAuthStore()
@@ -47,13 +48,7 @@ export default function Navbar() {
           <span className="font-semibold text-gray-900 dark:text-white hidden sm:block text-xs">MediCaps<span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Market</span></span>
         </Link>
 
-        <form onSubmit={handleSearch} className="flex-1 max-w-xl">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search books, electronics, cycles..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200" />
-          </div>
-        </form>
+        <SearchBar />
 
         <div className="hidden md:flex items-center gap-2">
           <motion.button whileTap={{ scale: 0.9 }} onClick={toggle} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">

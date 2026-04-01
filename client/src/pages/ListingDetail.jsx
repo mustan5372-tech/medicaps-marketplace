@@ -9,8 +9,7 @@ import toast from 'react-hot-toast'
 import { FiMapPin, FiClock, FiMessageSquare, FiHeart, FiFlag, FiEdit, FiTrash2, FiChevronLeft, FiChevronRight, FiCheckCircle } from 'react-icons/fi'
 import api from '../utils/api'
 
-import AnimatedPage from '../components/AnimatedPage'
-import ScrollReveal from '../components/ScrollReveal'
+import { analytics } from '../utils/analytics'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -24,11 +23,15 @@ export default function ListingDetail() {
   const [reportReason, setReportReason] = useState('')
 
   useEffect(() => { fetchListing(id) }, [id])
+  useEffect(() => {
+    if (listing) analytics.viewListing(listing._id, listing.title, listing.price)
+  }, [listing])
   useEffect(() => { if (listing) setSaved(listing.savedBy?.includes(user?._id)) }, [listing])
 
   const handleContact = async () => {
     if (!user) { toast.error('Login to contact seller'); return }
-    const conv = await startConversation(listing.seller._id, listing._id)
+    analytics.startChat(listing._id, listing.seller._id)
+    await startConversation(listing.seller._id, listing._id)
     navigate(`/chat/${listing.seller._id}?listing=${listing._id}`)
   }
 

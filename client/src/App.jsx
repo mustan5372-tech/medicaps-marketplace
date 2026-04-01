@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useThemeStore } from './store/themeStore'
+import { trackPageView } from './utils/analytics'
 
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
@@ -26,6 +27,7 @@ import FloatingPostButton from './components/FloatingPostButton'
 
 function AnimatedRoutes() {
   const location = useLocation()
+  useEffect(() => { trackPageView(location.pathname) }, [location])
   return (
     <AnimatePresence mode="wait" initial={false}>
       <Routes location={location} key={location.pathname}>
