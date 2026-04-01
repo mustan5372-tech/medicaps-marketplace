@@ -1,5 +1,5 @@
 // Google Analytics 4 utility
-const GA_ID = import.meta.env.VITE_GA_ID || 'G-XXXXXXXXXX'
+const GA_ID = 'G-PZEEYPXVR5'
 
 // Track page view
 export function trackPageView(path) {
