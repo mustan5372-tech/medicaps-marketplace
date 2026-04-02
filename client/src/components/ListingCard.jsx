@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { FiHeart, FiMapPin, FiClock, FiEye } from 'react-icons/fi'
+import { FiHeart, FiMapPin, FiClock, FiEye, FiMoreVertical, FiTrash2, FiFlag } from 'react-icons/fi'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuthStore } from '../store/authStore'
 import api from '../utils/api'
@@ -19,6 +19,23 @@ export default function ListingCard({ listing }) {
   const [saved, setSaved] = useState(listing.savedBy?.includes(user?._id))
   const [imgLoaded, setImgLoaded] = useState(false)
   const [quickView, setQuickView] = useState(false)
+  const [adminMenu, setAdminMenu] = useState(false)
+  const isAdmin = user?.role === 'admin'
+
+  const adminDelete = async (e) => {
+    e.preventDefault()
+    if (!confirm('Delete this listing?')) return
+    await api.delete(`/admin/listings/${listing._id}`)
+    toast.success('Deleted')
+    window.location.reload()
+  }
+
+  const adminFlag = async (e) => {
+    e.preventDefault()
+    await api.patch(`/admin/listings/${listing._id}/flag`, { reason: 'Flagged by admin' })
+    toast.success('Flagged')
+    setAdminMenu(false)
+  }
 
   const toggleSave = async (e) => {
     e.preventDefault()
@@ -83,6 +100,33 @@ export default function ListingCard({ listing }) {
             <span className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-lg backdrop-blur-sm ${CONDITION_STYLES[listing.condition] || 'bg-gray-500/90 text-white'}`}>
               {listing.condition}
             </span>
+
+            {/* Admin controls */}
+            {isAdmin && (
+              <div className="absolute bottom-3 left-3" onClick={e => e.preventDefault()}>
+                <button onClick={e => { e.preventDefault(); setAdminMenu(!adminMenu) }}
+                  className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm transition">
+                  <FiMoreVertical className="w-3.5 h-3.5" />
+                </button>
+                {adminMenu && (
+                  <div className="absolute bottom-8 left-0 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden w-36 z-20">
+                    <button onClick={adminDelete} className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                      <FiTrash2 className="w-3.5 h-3.5" /> Delete
+                    </button>
+                    <button onClick={adminFlag} className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
+                      <FiFlag className="w-3.5 h-3.5" /> Flag as Fake
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Flagged badge */}
+            {listing.isFlagged && (
+              <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center pointer-events-none">
+                <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">⚠ FLAGGED</span>
+              </div>
+            )}
           </div>
 
           <div className="p-4">
