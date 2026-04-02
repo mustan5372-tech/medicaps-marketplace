@@ -7,6 +7,7 @@ import ListingCard from '../components/ListingCard'
 import SkeletonCard from '../components/SkeletonCard'
 import FilterSidebar from '../components/FilterSidebar'
 import AnimatedPage from '../components/AnimatedPage'
+import DeveloperSection from '../components/DeveloperSection'
 import { staggerContainer, fadeUp } from '../utils/animations'
 import { trackEvent } from '../utils/analytics'
 import { FiFilter, FiPlus, FiTrendingUp, FiBook, FiMonitor, FiHome, FiTruck, FiShoppingBag, FiUsers, FiZap, FiClock } from 'react-icons/fi'
@@ -229,6 +230,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Developer Section */}
+      <DeveloperSection />
     </AnimatedPage>
   )
 }
