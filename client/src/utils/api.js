@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-// Hardcoded Railway URL - no env var dependency
+// Hardcoded Railway URL v2
 const BASE_URL = 'https://medicaps-backend-production.up.railway.app/api'
 
 const api = axios.create({
