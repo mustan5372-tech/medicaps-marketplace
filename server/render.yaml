@@ -2,10 +2,33 @@ services:
   - type: web
     name: medicaps-marketplace-api
     env: node
+    region: oregon
+    plan: free
     buildCommand: npm install --legacy-peer-deps
     startCommand: node index.js
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        value: https://medicapsmart.vercel.app
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: ENCRYPTION_KEY
+        value: medicaps-e2e-secret-key-2024-32ch
