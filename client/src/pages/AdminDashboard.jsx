@@ -106,11 +106,22 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
-        {TABS.map(t => (
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        {[
+          { id: 'listings', label: 'Listings', icon: FiList, count: listings.length },
+          { id: 'flagged', label: 'Flagged', icon: FiFlag, count: listings.filter(l => l.isFlagged).length },
+          { id: 'users', label: 'Users', icon: FiUsers, count: users.length },
+          { id: 'reports', label: 'Reports', icon: FiAlertTriangle, count: reports.length },
+        ].map(t => (
           <motion.button key={t.id} whileTap={{ scale: 0.95 }} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition shrink-0 ${tab === t.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-400'}`}>
-            <t.icon className="w-4 h-4" /> {t.label}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition shrink-0 ${tab === t.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-400'}`}>
+            <t.icon className="w-4 h-4" />
+            {t.label}
+            {t.count > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${tab === t.id ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                {t.count}
+              </span>
+            )}
           </motion.button>
         ))}
       </div>
@@ -195,12 +206,18 @@ export default function AdminDashboard() {
                     <p className="text-sm text-gray-500">Reason: {r.reason} · By: {r.reporter?.name}</p>
                   </div>
                   <div className="flex gap-2">
-                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => { setFlagModal(r.listing?._id); resolveReport(r._id) }}
+                    <motion.button whileTap={{ scale: 0.9 }} onClick={async () => {
+                      if (r.listing?._id) {
+                        await api.patch(`/admin/listings/${r.listing._id}/flag`, { reason: r.reason })
+                        setListings(prev => prev.map(l => l._id === r.listing._id ? { ...l, isFlagged: true } : l))
+                      }
+                      resolveReport(r._id)
+                    }}
                       className="px-3 py-1.5 text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-xl hover:bg-orange-100 transition">
                       Flag & Resolve
                     </motion.button>
                     <motion.button whileTap={{ scale: 0.9 }} onClick={() => resolveReport(r._id)}
-                      className="px-3 py-1.5 text-sm bg-green-50 dark:bg-green-900/20 text-green-600 rounded-xl hover:bg-green-100 transition">
+                      className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-xl hover:bg-green-100 transition">
                       <FiCheckCircle className="w-4 h-4" />
                     </motion.button>
                   </div>
