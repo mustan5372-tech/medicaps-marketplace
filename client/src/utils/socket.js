@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000'
+// Hardcoded Railway URL - no env var dependency
+const SOCKET_URL = 'https://medicaps-backend-production.up.railway.app'
 
 let socket = null
 
