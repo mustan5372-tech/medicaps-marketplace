@@ -1,7 +1,6 @@
 import axios from 'axios'
 
-// Hardcoded Railway URL v2
-const BASE_URL = 'https://medicaps-backend-production.up.railway.app/api'
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://medicaps-backend-7cwm.onrender.com/api'
 
 const api = axios.create({
   baseURL: BASE_URL,
