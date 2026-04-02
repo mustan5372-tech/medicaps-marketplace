@@ -52,7 +52,7 @@ export default function Navbar() {
         <SearchBar />
 
         <div className="hidden md:flex items-center gap-2">
-          <motion.button whileTap={{ scale: 0.9 }} onClick={toggle} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={toggle} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
             {dark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
           </motion.button>
 
@@ -63,16 +63,16 @@ export default function Navbar() {
                   <FiPlus className="w-4 h-4" /> Sell
                 </motion.button>
               </Link>
-              <Link to="/chat" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"><FiMessageSquare className="w-5 h-5" /></Link>
-              <Link to="/leaderboard" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition" title="Leaderboard"><FiAward className="w-5 h-5" /></Link>
-              <Link to="/saved" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"><FiHeart className="w-5 h-5" /></Link>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Link to="/chat" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition block"><FiMessageSquare className="w-5 h-5" /></Link></motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Link to="/leaderboard" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition block" title="Leaderboard"><FiAward className="w-5 h-5" /></Link></motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Link to="/saved" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition block"><FiHeart className="w-5 h-5" /></Link></motion.div>
               <NotificationBell />
               <div className="relative" ref={profileRef}>
-                <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
                     {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover rounded-xl" /> : user.name?.[0]?.toUpperCase()}
                   </div>
-                </button>
+                </motion.button>
                 <AnimatePresence>
                   {profileOpen && (
                     <motion.div initial={{ opacity: 0, y: -8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.95 }} transition={{ duration: 0.15 }}

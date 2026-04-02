@@ -222,8 +222,8 @@ export default function Chat() {
                   {messages.map((msg, i) => {
                     const isMine = msg.sender === user._id || msg.sender?._id === user._id
                     return (
-                      <motion.div key={msg._id || i} initial={{ opacity: 0, y: 12, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <motion.div key={msg._id || i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-sm shadow-sm ${isMine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-sm'}`}>
                           <p className="leading-relaxed break-words">{msg.text}</p>
                           <p className={`text-xs mt-1 ${isMine ? 'text-blue-200' : 'text-gray-400'}`}>
@@ -236,10 +236,17 @@ export default function Chat() {
                 </AnimatePresence>
                 <AnimatePresence>
                   {isTypingOther && (
-                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="flex justify-start">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="flex justify-start">
                       <div className="bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl rounded-bl-sm">
-                        <div className="flex gap-1 items-center">
-                          {[0, 1, 2].map(i => <span key={i} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+                        <div className="flex gap-1.5 items-center">
+                          {[0, 1, 2].map(i => (
+                            <motion.span 
+                              key={i} 
+                              animate={{ y: [0, -5, 0] }} 
+                              transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15, ease: "easeInOut" }} 
+                              className="w-1.5 h-1.5 bg-gray-500 rounded-full inline-block" 
+                            />
+                          ))}
                         </div>
                       </div>
                     </motion.div>

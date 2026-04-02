@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { listingCardVariant } from '../utils/animations'
 import { Link } from 'react-router-dom'
 import { FiHeart, FiMapPin, FiClock, FiEye, FiMoreVertical, FiTrash2, FiFlag } from 'react-icons/fi'
 import { formatDistanceToNow } from 'date-fns'
@@ -58,11 +59,9 @@ export default function ListingCard({ listing }) {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -6 }}
-        transition={{ duration: 0.2 }}
-        className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-black/10 dark:hover:shadow-black/40 transition-all duration-300 cursor-pointer"
+        variants={listingCardVariant}
+        whileHover={{ scale: 1.03, y: -4, boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.4)' }}
+        className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 transition-colors duration-300 cursor-pointer"
       >
         <Link to={`/listing/${listing._id}`} onClick={handleClick}>
           <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800">
@@ -72,7 +71,7 @@ export default function ListingCard({ listing }) {
               alt={listing.title}
               onLoad={() => setImgLoaded(true)}
               onError={e => { e.target.src = `https://placehold.co/400x300/e2e8f0/94a3b8?text=${encodeURIComponent(listing.category || 'Item')}`; setImgLoaded(true) }}
-              className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className={`w-full h-full object-cover transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05] ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

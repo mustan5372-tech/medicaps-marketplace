@@ -57,6 +57,18 @@ export default function Home() {
           <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-300/20 rounded-full blur-2xl" />
 
+          {/* Parallax elements */}
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="absolute top-[10%] left-[10%] w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-full backdrop-blur-md border border-white/10" style={{ y: 20 }} />
+          <motion.div 
+            initial={{ y: -50, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+            className="absolute bottom-[20%] right-[15%] w-32 h-32 bg-gradient-to-tr from-white/5 to-transparent rounded-full backdrop-blur-md border border-white/10" style={{ y: -30 }} />
+
           <div className="relative z-10 p-10 md:p-16 text-center">
             <motion.div variants={staggerContainer(0.1)} initial="hidden" animate="show">
               <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-5 border border-white/30">
@@ -132,27 +144,38 @@ export default function Home() {
               <FiClock className="w-4 h-4 text-gray-500" />
               <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recently Viewed</h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <motion.div variants={staggerContainer(0.08)} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {recentlyViewed.map(l => <ListingCard key={l._id} listing={l} />)}
-            </div>
+            </motion.div>
           </div>
         )}
 
-        {/* Category pills */}
         <motion.div variants={staggerContainer(0.05, 0.1)} initial="hidden" animate="show"
-          className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-8">
-          {CATEGORIES.map(({ label, icon: Icon }) => (
-            <motion.button key={label} variants={fadeUp}
-              whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.94 }}
-              onClick={() => { setFilters({ category: label === 'All' ? '' : label }); fetchListings() }}
-              className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                (label === 'All' && !filters.category) || filters.category === label
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-                  : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-blue-400 hover:text-blue-600 hover:shadow-md'
-              }`}>
-              {Icon && <Icon className="w-3.5 h-3.5" />} {label}
-            </motion.button>
-          ))}
+          className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-8 relative">
+          {CATEGORIES.map(({ label, icon: Icon }) => {
+            const isActive = (label === 'All' && !filters.category) || filters.category === label;
+            return (
+              <motion.button key={label} variants={fadeUp}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)" }} whileTap={{ scale: 0.95 }}
+                onClick={() => { setFilters({ category: label === 'All' ? '' : label }); fetchListings() }}
+                className={`relative shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 border ${
+                  isActive
+                    ? 'border-transparent text-white'
+                    : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-blue-400 hover:text-blue-600'
+                }`}>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeCategoryIndicator"
+                    className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-lg shadow-blue-500/30"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  {Icon && <Icon className="w-3.5 h-3.5" />} {label}
+                </span>
+              </motion.button>
+            )
+          })}
         </motion.div>
 
         <div className="flex gap-6">
@@ -219,9 +242,7 @@ export default function Home() {
                     </motion.div>
                   )
                   : listings.map(l => (
-                    <motion.div key={l._id} variants={fadeUp}>
-                      <ListingCard listing={l} />
-                    </motion.div>
+                      <ListingCard key={l._id} listing={l} />
                   ))
               }
             </motion.div>

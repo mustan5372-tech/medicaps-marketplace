@@ -47,9 +47,9 @@ export default function SearchBar() {
   return (
     <div ref={wrapperRef} className="flex-1 max-w-xl relative">
       <motion.div
-        animate={{ scale: focused ? 1.01 : 1 }}
-        transition={{ duration: 0.15 }}
-        className={`relative transition-all duration-200 ${focused ? 'ring-2 ring-blue-500/40 rounded-xl' : ''}`}
+        animate={{ scale: focused ? 1.02 : 1, boxShadow: focused ? '0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.2)' : 'none' }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-xl"
       >
         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
         <input
@@ -66,10 +66,10 @@ export default function SearchBar() {
       <AnimatePresence>
         {showDropdown && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
           >
             {recent.length > 0 && (

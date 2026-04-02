@@ -67,9 +67,9 @@ export default function NotificationBell() {
         onClick={() => setOpen(!open)}
         className="relative p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"
       >
-        <motion.div animate={unreadCount > 0 ? { rotate: [0, -15, 15, -10, 10, 0] } : {}}
-          transition={{ duration: 0.5, delay: 0.2 }}>
-          <FiBell className="w-5 h-5" />
+        <motion.div animate={unreadCount > 0 ? { scale: [1, 1.2, 1], opacity: [1, 0.8, 1] } : {}}
+          transition={unreadCount > 0 ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : {}}>
+          <FiBell className="w-5 h-5 focus:outline-none" />
         </motion.div>
         <AnimatePresence>
           {unreadCount > 0 && (
