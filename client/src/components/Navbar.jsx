@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../store/authStore'
 import { useThemeStore } from '../store/themeStore'
 import { useListingStore } from '../store/listingStore'
-import { FiSearch, FiSun, FiMoon, FiPlus, FiMessageSquare, FiHeart, FiUser, FiLogOut, FiShield, FiMenu, FiX } from 'react-icons/fi'
+import { FiSearch, FiSun, FiMoon, FiPlus, FiMessageSquare, FiHeart, FiUser, FiLogOut, FiShield, FiMenu, FiX, FiAward } from 'react-icons/fi'
 import SearchBar from './SearchBar'
 import NotificationBell from './NotificationBell'
 
@@ -64,6 +64,7 @@ export default function Navbar() {
                 </motion.button>
               </Link>
               <Link to="/chat" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"><FiMessageSquare className="w-5 h-5" /></Link>
+              <Link to="/leaderboard" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition" title="Leaderboard"><FiAward className="w-5 h-5" /></Link>
               <Link to="/saved" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"><FiHeart className="w-5 h-5" /></Link>
               <NotificationBell />
               <div className="relative" ref={profileRef}>

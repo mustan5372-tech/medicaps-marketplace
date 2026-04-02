@@ -156,8 +156,17 @@ export default function Home() {
         </motion.div>
 
         <div className="flex gap-6">
-          <aside className="hidden lg:block w-64 shrink-0">
+          <aside className="hidden lg:block w-64 shrink-0 space-y-4">
             <FilterSidebar />
+            {/* Mini leaderboard teaser */}
+            <Link to="/leaderboard" className="block bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-800 p-4 hover:shadow-md transition group">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🏆</span>
+                <span className="font-semibold text-sm text-gray-900 dark:text-white">Monthly Leaderboard</span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">See who's selling the most this month</p>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mt-2 group-hover:underline">View rankings →</p>
+            </Link>
           </aside>
 
           <div className="flex-1">

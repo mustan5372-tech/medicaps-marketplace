@@ -17,6 +17,7 @@ import Profile from './pages/Profile'
 import Chat from './pages/Chat'
 import AdminDashboard from './pages/AdminDashboard'
 import SavedListings from './pages/SavedListings'
+import Leaderboard from './pages/Leaderboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import ForgotPassword from './pages/ForgotPassword'
@@ -38,6 +39,7 @@ function AnimatedRoutes() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/listing/:id" element={<ListingDetail />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/create-listing" element={<CreateListing />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
