@@ -81,7 +81,7 @@ export default function Home() {
               </motion.h1>
 
               <motion.p variants={fadeUp} className="text-blue-100 text-lg max-w-lg mx-auto mb-3">
-                The trusted marketplace for MediCaps students.
+                The trusted marketplace for MediCaps students — buy, sell, and connect on campus.
               </motion.p>
 
               {/* Social proof */}
@@ -195,7 +195,7 @@ export default function Home() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-5">
               <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                {loading ? 'Loading...' : `${total} listing${total !== 1 ? 's' : ''}`}
+                {loading ? 'Finding listings...' : total === 0 ? 'No results' : `${total} listing${total !== 1 ? 's' : ''} found`}
               </p>
               <button onClick={() => setShowFilter(!showFilter)}
                 className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:border-blue-400 transition">
@@ -218,23 +218,25 @@ export default function Home() {
                   ? (
                     <motion.div variants={fadeUp} className="col-span-full">
                       <div className="text-center py-20 px-8 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-3xl flex items-center justify-center mx-auto mb-5">
-                          <span className="text-5xl">🛍️</span>
-                        </div>
-                        <h3 className="font-bold text-gray-900 dark:text-white text-xl mb-2">No listings yet</h3>
-                        <p className="text-gray-500 dark:text-gray-400 mb-6">Be the first to sell something 🚀</p>
+                        <div className="text-5xl mb-4">👀</div>
+                        <h3 className="font-bold text-gray-900 dark:text-white text-xl mb-2">Nothing here yet</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">
+                          {filters.category || filters.search
+                            ? "Try changing filters or post your own item 🚀"
+                            : "Be the first to sell something on campus!"}
+                        </p>
                         {user ? (
                           <Link to="/create-listing">
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25">
-                              <FiPlus className="w-4 h-4" /> Post First Listing
+                              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25 transition">
+                              <FiPlus className="w-4 h-4" /> Sell something
                             </motion.button>
                           </Link>
                         ) : (
                           <Link to="/register">
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25">
-                              Join & Sell Now
+                              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25 transition">
+                              Join & start selling
                             </motion.button>
                           </Link>
                         )}

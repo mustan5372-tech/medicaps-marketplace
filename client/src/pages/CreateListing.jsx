@@ -72,7 +72,8 @@ export default function CreateListing() {
 
   return (
     <AnimatedPage className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Post a Listing</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Sell something</h1>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Fill in the details and your listing goes live instantly.</p>
       <form onSubmit={handleSubmit} className="space-y-5">
 
         {/* Image Upload */}
@@ -153,7 +154,7 @@ export default function CreateListing() {
 
         <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={loading || compressing}
           className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/25">
-          {loading ? 'Posting...' : 'Post Listing'}
+          {loading ? 'Posting...' : 'Post listing'}
         </motion.button>
       </form>
       {showWarning && <FakeListingWarning onConfirm={doSubmit} onCancel={() => setShowWarning(false)} />}

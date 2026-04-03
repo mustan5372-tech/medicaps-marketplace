@@ -103,9 +103,10 @@ export default function Chat() {
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 && (
-              <div className="text-center py-16 text-gray-400">
-                <FiMessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No conversations yet</p>
+              <div className="text-center py-16 px-4 text-gray-400">
+                <FiMessageSquare className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No chats yet</p>
+                <p className="text-xs mt-1 opacity-60">Find a listing and tap "Chat with Seller"</p>
               </div>
             )}
             {conversations.map(conv => {
@@ -132,7 +133,7 @@ export default function Chat() {
                       </p>
                     )}
                     <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1">
-                      {conv.lastMessage ? <><FiLock className="w-2.5 h-2.5" /> encrypted</> : 'Start chatting'}
+                      {conv.lastMessage ? <><FiLock className="w-2.5 h-2.5" /> encrypted message</> : 'Say hi 👋'}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
@@ -265,7 +266,7 @@ export default function Chat() {
                 </div>
               ) : (
                 <form onSubmit={handleSend} className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-                  <input value={text} onChange={handleTyping} placeholder="Type a message..."
+                  <input value={text} onChange={handleTyping} placeholder="Write something..."
                     className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
                   <motion.button whileTap={{ scale: 0.88 }} type="submit" disabled={!text.trim()}
                     className="p-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl transition">
@@ -279,8 +280,8 @@ export default function Chat() {
               className="hidden md:flex flex-1 items-center justify-center text-gray-400">
               <div className="text-center">
                 <FiMessageSquare className="w-14 h-14 mx-auto mb-3 opacity-20" />
-                <p className="font-medium">Select a conversation</p>
-                <p className="text-sm mt-1 opacity-60">or start one from a listing</p>
+                <p className="font-medium text-gray-500 dark:text-gray-400">Pick a conversation</p>
+                <p className="text-sm mt-1 text-gray-400 dark:text-gray-500">or tap "Chat with Seller" on any listing</p>
               </div>
             </motion.div>
           )}

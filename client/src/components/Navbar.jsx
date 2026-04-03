@@ -108,7 +108,7 @@ export default function Navbar() {
               </button>
               {user ? (
                 <>
-                  <Link to="/create-listing" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold"><FiPlus className="w-4 h-4" /> Sell Item</Link>
+                  <Link to="/create-listing" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"><FiPlus className="w-4 h-4" /> Sell something</Link>
                   <Link to="/chat" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiMessageSquare className="w-4 h-4" /> Messages</Link>
                   <Link to="/saved" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiHeart className="w-4 h-4" /> Saved</Link>
                   <Link to={`/profile/${user._id}`} onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiUser className="w-4 h-4" /> Profile</Link>

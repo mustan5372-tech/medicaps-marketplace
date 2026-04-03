@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiSearch, FiClock, FiTrendingUp, FiX } from 'react-icons/fi'
 import { useListingStore } from '../store/listingStore'
 
-const TRENDING = ['Engineering Books', 'Laptop', 'Cycle', 'Calculator', 'Hostel Items']
+const TRENDING = ['Engineering Books', 'Laptop', 'Cycle', 'Calculator', 'Hostel essentials']
 
 export default function SearchBar() {
   const [query, setQuery] = useState('')
@@ -58,7 +58,7 @@ export default function SearchBar() {
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
-          placeholder="Search books, electronics, cycles..."
+          placeholder="Search books, gadgets, cycles..."
           className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 border border-transparent focus:border-blue-500 focus:outline-none transition-all duration-200"
         />
       </motion.div>
