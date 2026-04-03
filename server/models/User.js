@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   ratingCount: { type: Number, default: 0 },
   blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   banned: { type: Boolean, default: false },
+  bannedReason: { type: String, default: '' },
   savedListings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Listing' }],
   verifyToken: String,
   verifyTokenExpiry: Date,

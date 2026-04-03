@@ -94,7 +94,12 @@ router.get('/users', async (req, res) => {
 router.patch('/users/:id/ban', async (req, res) => {
   try {
     if (req.params.id === req.user._id.toString()) return res.status(400).json({ message: "Can't ban yourself" })
-    const user = await User.findByIdAndUpdate(req.params.id, { banned: true }, { new: true })
+    const { reason } = req.body
+    const user = await User.findByIdAndUpdate(
+      req.params.id, 
+      { banned: true, bannedReason: reason || '' }, 
+      { new: true }
+    )
     res.json({ user })
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
@@ -102,7 +107,7 @@ router.patch('/users/:id/ban', async (req, res) => {
 // Unban user
 router.patch('/users/:id/unban', async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { banned: false }, { new: true })
+    const user = await User.findByIdAndUpdate(req.params.id, { banned: false, bannedReason: '' }, { new: true })
     res.json({ user })
   } catch (err) { res.status(500).json({ message: err.message }) }
 })

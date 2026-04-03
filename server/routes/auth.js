@@ -56,7 +56,11 @@ router.post('/login', async (req, res) => {
     if (isEmailConfigured && !user.isVerified) {
       return res.status(401).json({ message: 'Please verify your email first' })
     }
-    if (user.banned) return res.status(403).json({ message: 'Your account has been banned' })
+    if (user.banned) return res.status(403).json({ 
+      message: user.bannedReason 
+        ? `Your account has been banned: ${user.bannedReason}` 
+        : 'Your account has been banned by the admin' 
+    })
 
     const token = signToken(user._id)
 

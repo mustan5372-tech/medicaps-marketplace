@@ -10,14 +10,20 @@ import { staggerContainer, fadeUp } from '../utils/animations'
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPass, setShowPass] = useState(false)
+  const [banMessage, setBanMessage] = useState('')
   const { login, loading } = useAuthStore()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setBanMessage('')
     const res = await login(form.email, form.password)
     if (res.success) { toast.success('Welcome back!'); navigate('/') }
-    else toast.error(res.message || 'Login failed')
+    else if (res.status === 403 || res.message?.toLowerCase().includes('banned')) {
+      setBanMessage(res.message)
+    } else {
+      toast.error(res.message || 'Login failed')
+    }
   }
 
   return (
@@ -67,6 +73,14 @@ export default function Login() {
             <motion.div variants={fadeUp} className="flex justify-end">
               <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot password?</Link>
             </motion.div>
+
+            {banMessage && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <span className="text-red-500 text-lg leading-none mt-0.5">🚫</span>
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{banMessage}</p>
+              </motion.div>
+            )}
 
             <motion.div variants={fadeUp}>
               <motion.button

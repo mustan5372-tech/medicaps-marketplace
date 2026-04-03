@@ -17,7 +17,11 @@ exports.protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await User.findById(decoded.id).select('-password')
     if (!user) return res.status(401).json({ message: 'User not found' })
-    if (user.banned) return res.status(403).json({ message: 'Account banned' })
+    if (user.banned) return res.status(403).json({ 
+      message: user.bannedReason 
+        ? `Your account has been banned: ${user.bannedReason}` 
+        : 'Your account has been banned by the admin' 
+    })
 
     req.user = user
     next()

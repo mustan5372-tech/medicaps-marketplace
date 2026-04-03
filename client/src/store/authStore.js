@@ -27,7 +27,7 @@ export const useAuthStore = create((set) => ({
       return { success: true }
     } catch (err) {
       set({ loading: false })
-      return { success: false, message: err.response?.data?.message || 'Login failed' }
+      return { success: false, status: err.response?.status, message: err.response?.data?.message || 'Login failed' }
     }
   },
 
