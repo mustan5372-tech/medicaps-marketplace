@@ -238,7 +238,8 @@ export default function AdminDashboard() {
               onClick={e => e.stopPropagation()}
               className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl">
               <h3 className="font-bold text-gray-900 dark:text-white mb-4">Flag Listing</h3>
-              <select value={flagReason} onChange={e => setFlagReason(e.target.value)} className="input mb-4">
+              <select value={flagReason} onChange={e => setFlagReason(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-orange-400 appearance-none cursor-pointer">
                 <option value="">Select reason</option>
                 <option value="Fake listing">Fake listing</option>
                 <option value="Spam">Spam</option>
