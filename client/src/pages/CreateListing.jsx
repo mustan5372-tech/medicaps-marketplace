@@ -8,6 +8,7 @@ import api from '../utils/api'
 import AnimatedPage from '../components/AnimatedPage'
 import { compressImage } from '../utils/imageCompress'
 import { analytics } from '../utils/analytics'
+import FakeListingWarning from '../components/FakeListingWarning'
 
 const CATEGORIES = ['Books', 'Electronics', 'Furniture', 'Vehicles', 'Clothing', 'Sports', 'Others']
 const CONDITIONS = ['New', 'Like New', 'Used']
@@ -19,6 +20,7 @@ export default function CreateListing() {
   const [compressing, setCompressing] = useState(false)
   const [images, setImages] = useState([])
   const [previews, setPreviews] = useState([])
+  const [showWarning, setShowWarning] = useState(false)
   const [form, setForm] = useState({
     title: '', description: '', price: '',
     category: 'Books', condition: 'Used',
@@ -49,6 +51,11 @@ export default function CreateListing() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (images.length === 0) { toast.error('Add at least one image'); return }
+    setShowWarning(true)
+  }
+
+  const doSubmit = async () => {
+    setShowWarning(false)
     setLoading(true)
     try {
       const formData = new FormData()
@@ -149,6 +156,7 @@ export default function CreateListing() {
           {loading ? 'Posting...' : 'Post Listing'}
         </motion.button>
       </form>
+      {showWarning && <FakeListingWarning onConfirm={doSubmit} onCancel={() => setShowWarning(false)} />}
     </AnimatedPage>
   )
 }

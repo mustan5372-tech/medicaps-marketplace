@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
   verifyTokenExpiry: Date,
   resetToken: String,
   resetTokenExpiry: Date,
+  freeBoostUsed: { type: Number, default: 0 },
 }, { timestamps: true })
 
 userSchema.pre('save', async function (next) {

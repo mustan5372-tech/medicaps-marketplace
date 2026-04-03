@@ -13,6 +13,7 @@ import AnimatedPage from '../components/AnimatedPage'
 import { analytics } from '../utils/analytics'
 import ListingCard from '../components/ListingCard'
 import StarRating from '../components/StarRating'
+import BoostButton from '../components/BoostButton'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -207,6 +208,7 @@ export default function ListingDetail() {
 
           {isOwner ? (
             <div className="flex gap-3 flex-wrap">
+              <BoostButton listing={listing} onBoosted={() => fetchListing(listing._id)} />
               {listing.status !== 'sold' && (
                 <motion.button whileTap={{ scale: 0.97 }} onClick={async () => {
                   if (!confirm('Mark this item as sold?')) return

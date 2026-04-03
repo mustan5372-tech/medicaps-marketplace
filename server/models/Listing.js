@@ -16,6 +16,8 @@ const listingSchema = new mongoose.Schema({
   flaggedReason: { type: String, default: '' },
   isActive: { type: Boolean, default: true },
   views: { type: Number, default: 0 },
+  isBoosted: { type: Boolean, default: false },
+  boostExpiresAt: { type: Date, default: null },
 }, { timestamps: true })
 
 listingSchema.index({ title: 'text', description: 'text' })

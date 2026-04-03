@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
     const sortObj = sortMap[sort] || { createdAt: -1 }
 
     const [listings, total] = await Promise.all([
-      Listing.find(query).sort(sortObj).skip((page - 1) * limit).limit(Number(limit)).populate('seller', 'name email avatar'),
+      Listing.find(query).sort({ isBoosted: -1, ...sortObj }).skip((page - 1) * limit).limit(Number(limit)).populate('seller', 'name email avatar'),
       Listing.countDocuments(query),
     ])
     res.json({ listings, total })
@@ -143,6 +143,25 @@ router.post('/:id/save', protect, async (req, res) => {
     }
     await user.save()
     res.json({ saved: idx === -1 })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// Boost listing (free, max 5 per user)
+router.post('/:id/boost', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    if (user.freeBoostUsed >= 5) return res.status(403).json({ message: 'Free boost limit reached' })
+    const listing = await Listing.findById(req.params.id)
+    if (!listing) return res.status(404).json({ message: 'Listing not found' })
+    if (listing.seller.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' })
+    listing.isBoosted = true
+    listing.boostExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    await listing.save()
+    user.freeBoostUsed += 1
+    await user.save()
+    res.json({ message: 'Listing boosted!', freeBoostUsed: user.freeBoostUsed, boostExpiresAt: listing.boostExpiresAt })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
