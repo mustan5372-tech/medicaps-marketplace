@@ -57,7 +57,7 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
-  const { checkAuth } = useAuthStore()
+  const { checkAuth, initialized } = useAuthStore()
   const { dark } = useThemeStore()
 
   useEffect(() => { checkAuth().catch(() => {}) }, [])
@@ -66,6 +66,13 @@ export default function App() {
     if (dark) document.documentElement.classList.add('dark')
     else document.documentElement.classList.remove('dark')
   }, [dark])
+
+  // Don't render routes until auth is resolved — prevents redirect flicker on mobile refresh
+  if (!initialized) return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">

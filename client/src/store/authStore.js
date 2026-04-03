@@ -4,16 +4,29 @@ import api from '../utils/api'
 export const useAuthStore = create((set) => ({
   user: null,
   loading: false,
+  initialized: false, // prevents flash of logged-out state on refresh
 
   checkAuth: async () => {
     const token = localStorage.getItem('token')
-    if (!token) return set({ user: null })
+    // If no token in localStorage, still try — cookie might be valid
+    if (!token) {
+      // Quick check via cookie (cross-origin with credentials)
+      try {
+        const res = await api.get('/auth/me')
+        // Cookie worked — save token if returned
+        if (res.data.token) localStorage.setItem('token', res.data.token)
+        set({ user: res.data.user, initialized: true })
+      } catch {
+        set({ user: null, initialized: true })
+      }
+      return
+    }
     try {
       const res = await api.get('/auth/me')
-      set({ user: res.data.user })
+      set({ user: res.data.user, initialized: true })
     } catch {
       localStorage.removeItem('token')
-      set({ user: null })
+      set({ user: null, initialized: true })
     }
   },
 
@@ -21,7 +34,6 @@ export const useAuthStore = create((set) => ({
     set({ loading: true })
     try {
       const res = await api.post('/auth/login', { email, password })
-      // Save token to localStorage for cross-origin auth
       if (res.data.token) localStorage.setItem('token', res.data.token)
       set({ user: res.data.user, loading: false })
       return { success: true }

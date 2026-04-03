@@ -47,7 +47,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body
     if (!email || !password) return res.status(400).json({ message: 'Email and password required' })
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email }).select('+password')
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' })
     }
@@ -79,7 +79,7 @@ router.post('/login', async (req, res) => {
   }
 })
 
-// Me
+// Me - lean query for speed
 router.get('/me', protect, (req, res) => res.json({ user: req.user }))
 
 // Logout
