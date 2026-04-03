@@ -127,6 +127,25 @@ export default function DeveloperSection() {
         >
           Built with ❤️ for MediCaps University students
         </motion.p>
+
+        {/* Co-founder card */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.7, duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="mt-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 px-6 py-5 flex items-center gap-4 shadow-sm"
+        >
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
+            <span className="text-white text-xl font-extrabold">P</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-bold text-gray-900 dark:text-white">Purandar Yadav</p>
+              <span className="text-xs px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full font-medium">Co-Founder</span>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Automobile Engineering (EV) · MediCaps University</p>
+          </div>
+        </motion.div>
       </motion.div>
     </section>
   )
