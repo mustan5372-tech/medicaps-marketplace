@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { FiGithub, FiMail, FiCode, FiUsers } from 'react-icons/fi'
+import { useParallax } from '../hooks/useParallax'
 
 const team = [
   {
@@ -50,8 +51,11 @@ const team = [
 ]
 
 function TeamCard({ member, delay, inView }) {
+  const { ref: parallaxRef, y } = useParallax(0.12, [-20, 20])
   return (
     <motion.div
+      ref={parallaxRef}
+      style={{ y }}
       initial={{ opacity: 0, y: 32 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}

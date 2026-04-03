@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useState, useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useListingStore } from '../store/listingStore'
 import { useAuthStore } from '../store/authStore'
@@ -8,6 +8,8 @@ import SkeletonCard from '../components/SkeletonCard'
 import FilterSidebar from '../components/FilterSidebar'
 import AnimatedPage from '../components/AnimatedPage'
 import DeveloperSection from '../components/DeveloperSection'
+import ScrollReveal from '../components/ScrollReveal'
+import WordReveal from '../components/WordReveal'
 import { staggerContainer, fadeUp } from '../utils/animations'
 import { trackEvent } from '../utils/analytics'
 import { FiFilter, FiPlus, FiTrendingUp, FiBook, FiMonitor, FiHome, FiTruck, FiShoppingBag, FiUsers, FiZap, FiClock } from 'react-icons/fi'
@@ -31,6 +33,13 @@ export default function Home() {
   const [recentlyViewed, setRecentlyViewed] = useState([])
   const totalPages = Math.ceil(total / 12)
 
+  // Parallax for hero orbs
+  const heroRef = useRef(null)
+  const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
+  const orb1Y = useTransform(heroScroll, [0, 1], [0, -60])
+  const orb2Y = useTransform(heroScroll, [0, 1], [0, -40])
+  const heroContentY = useTransform(heroScroll, [0, 1], [0, 30])
+
   useEffect(() => { fetchListings() }, [filters, page])
 
   useEffect(() => {
@@ -49,36 +58,26 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 py-8">
 
         {/* Hero */}
-        <div className="relative mb-10 overflow-hidden rounded-3xl">
+        <div ref={heroRef} className="relative mb-10 overflow-hidden rounded-3xl">
           {/* Animated gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-700 animate-gradient" />
-          {/* Glow orbs */}
-          <div className="absolute -top-20 -left-20 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-300/20 rounded-full blur-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-700" />
+          {/* Parallax orbs */}
+          <motion.div style={{ y: orb1Y }} className="absolute -top-20 -left-20 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl pointer-events-none" />
+          <motion.div style={{ y: orb2Y }} className="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-300/20 rounded-full blur-2xl pointer-events-none" />
 
-          {/* Parallax elements */}
-          <motion.div 
-            initial={{ y: 50, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="absolute top-[10%] left-[10%] w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-full backdrop-blur-md border border-white/10" style={{ y: 20 }} />
-          <motion.div 
-            initial={{ y: -50, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-            className="absolute bottom-[20%] right-[15%] w-32 h-32 bg-gradient-to-tr from-white/5 to-transparent rounded-full backdrop-blur-md border border-white/10" style={{ y: -30 }} />
-
-          <div className="relative z-10 p-10 md:p-16 text-center">
+          <motion.div style={{ y: heroContentY }} className="relative z-10 p-10 md:p-16 text-center">
             <motion.div variants={staggerContainer(0.1)} initial="hidden" animate="show">
               <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-5 border border-white/30">
                 <FiTrendingUp className="w-3.5 h-3.5" /> MediCaps University Marketplace
               </motion.div>
 
-              <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-4">
-                Buy & Sell<br />
-                <span className="text-blue-200">Within Campus</span>
-              </motion.h1>
+              <WordReveal
+                text="Buy & Sell Within Campus"
+                as="h1"
+                delay={0.15}
+                className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-4 justify-center"
+              />
 
               <motion.p variants={fadeUp} className="text-blue-100 text-lg max-w-lg mx-auto mb-3">
                 The trusted marketplace for MediCaps students — buy, sell, and connect on campus.
@@ -139,7 +138,7 @@ export default function Home() {
 
         {/* Recently Viewed */}
         {recentlyViewed.length > 0 && (
-          <div className="mb-8">
+          <ScrollReveal className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <FiClock className="w-4 h-4 text-gray-500" />
               <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recently Viewed</h2>
@@ -147,7 +146,7 @@ export default function Home() {
             <motion.div variants={staggerContainer(0.08)} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {recentlyViewed.map(l => <ListingCard key={l._id} listing={l} />)}
             </motion.div>
-          </div>
+          </ScrollReveal>
         )}
 
         <motion.div variants={staggerContainer(0.05, 0.1)} initial="hidden" animate="show"
@@ -180,16 +179,20 @@ export default function Home() {
 
         <div className="flex gap-6">
           <aside className="hidden lg:block w-64 shrink-0 space-y-4">
-            <FilterSidebar />
+            <ScrollReveal direction="left">
+              <FilterSidebar />
+            </ScrollReveal>
             {/* Mini leaderboard teaser */}
-            <Link to="/leaderboard" className="block bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-800 p-4 hover:shadow-md transition group">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">🏆</span>
-                <span className="font-semibold text-sm text-gray-900 dark:text-white">Monthly Leaderboard</span>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">See who's selling the most this month</p>
-              <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mt-2 group-hover:underline">View rankings →</p>
-            </Link>
+            <ScrollReveal direction="left" delay={0.1}>
+              <Link to="/leaderboard" className="block bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-800 p-4 hover:shadow-md transition group">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">🏆</span>
+                  <span className="font-semibold text-sm text-gray-900 dark:text-white">Monthly Leaderboard</span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">See who's selling the most this month</p>
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mt-2 group-hover:underline">View rankings →</p>
+              </Link>
+            </ScrollReveal>
           </aside>
 
           <div className="flex-1">
