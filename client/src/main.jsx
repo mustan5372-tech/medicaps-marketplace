@@ -9,6 +9,12 @@ const lenis = new Lenis({ duration: 1.2, easing: t => Math.min(1, 1.001 - Math.p
 function raf(time) { lenis.raf(time); requestAnimationFrame(raf) }
 requestAnimationFrame(raf)
 
+// Keep Render free tier awake by pinging every 10 minutes
+const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://medicaps-backend-7cwm.onrender.com'
+const ping = () => fetch(`${BACKEND}/api/health`).catch(() => {})
+ping()
+setInterval(ping, 10 * 60 * 1000)
+
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null } }
   componentDidCatch(error) { this.setState({ error }) }
