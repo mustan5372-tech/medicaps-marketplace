@@ -8,6 +8,7 @@ import { FiSearch, FiSun, FiMoon, FiPlus, FiMessageSquare, FiHeart, FiUser, FiLo
 import { RiMagicLine } from 'react-icons/ri'
 import SearchBar from './SearchBar'
 import NotificationBell from './NotificationBell'
+import ActivityBar from './ActivityBar'
 
 export default function Navbar() {
   const { user, logout } = useAuthStore()
@@ -133,6 +134,7 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+      <ActivityBar />
     </motion.nav>
   )
 }

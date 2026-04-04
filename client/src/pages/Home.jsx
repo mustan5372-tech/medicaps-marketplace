@@ -11,6 +11,7 @@ import DeveloperSection from '../components/DeveloperSection'
 import ScrollReveal from '../components/ScrollReveal'
 import WordReveal from '../components/WordReveal'
 import HeroCTA from '../components/HeroCTA'
+import HeroListingPreview from '../components/HeroListingPreview'
 import { staggerContainer, fadeUp } from '../utils/animations'
 import { trackEvent } from '../utils/analytics'
 import { FiFilter, FiPlus, FiTrendingUp, FiBook, FiMonitor, FiHome, FiTruck, FiShoppingBag, FiUsers, FiZap, FiClock } from 'react-icons/fi'
@@ -128,6 +129,9 @@ export default function Home() {
                   </div>
                 ))}
               </motion.div>
+
+              {/* Live listings preview */}
+              <HeroListingPreview />
             </motion.div>
           </motion.div>
         </div>
@@ -217,25 +221,27 @@ export default function Home() {
                   ? (
                     <motion.div variants={fadeUp} className="col-span-full">
                       <div className="text-center py-20 px-8 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
-                        <div className="text-5xl mb-4">👀</div>
-                        <h3 className="font-bold text-gray-900 dark:text-white text-xl mb-2">Nothing here yet</h3>
+                        <div className="text-5xl mb-4">😴</div>
+                        <h3 className="font-bold text-gray-900 dark:text-white text-xl mb-2">
+                          {filters.category || filters.search ? 'Nothing matches that' : 'No listings yet'}
+                        </h3>
                         <p className="text-gray-500 dark:text-gray-400 mb-6">
                           {filters.category || filters.search
                             ? "Try changing filters or post your own item 🚀"
-                            : "Be the first to sell something on campus!"}
+                            : "Be the first seller and grab all the attention 🔥"}
                         </p>
                         {user ? (
                           <Link to="/create-listing">
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25 transition">
-                              <FiPlus className="w-4 h-4" /> Sell something
+                              <FiPlus className="w-4 h-4" /> Sell something now
                             </motion.button>
                           </Link>
                         ) : (
                           <Link to="/register">
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25 transition">
-                              Join & start selling
+                              Join & be the first seller
                             </motion.button>
                           </Link>
                         )}

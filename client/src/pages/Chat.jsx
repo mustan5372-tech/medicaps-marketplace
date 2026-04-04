@@ -265,13 +265,25 @@ export default function Chat() {
                   </p>
                 </div>
               ) : (
-                <form onSubmit={handleSend} className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-                  <input value={text} onChange={handleTyping} placeholder="Write something..."
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
-                  <motion.button whileTap={{ scale: 0.88 }} type="submit" disabled={!text.trim()}
-                    className="p-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl transition">
-                    <FiSend className="w-4 h-4" />
-                  </motion.button>
+                <form onSubmit={handleSend} className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                  {/* Quick replies */}
+                  <div className="flex gap-2 px-4 pt-2.5 pb-1 overflow-x-auto scrollbar-hide">
+                    {['Is this available?', 'Final price?', 'Can we meet today?'].map(q => (
+                      <button key={q} type="button"
+                        onClick={() => { setText(q) }}
+                        className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition bg-gray-50 dark:bg-gray-800">
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <input value={text} onChange={handleTyping} placeholder="Write something..."
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                    <motion.button whileTap={{ scale: 0.88 }} type="submit" disabled={!text.trim()}
+                      className="p-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl transition">
+                      <FiSend className="w-4 h-4" />
+                    </motion.button>
+                  </div>
                 </form>
               )}
             </motion.div>
