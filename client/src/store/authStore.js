@@ -38,6 +38,19 @@ export const useAuthStore = create((set) => ({
       set({ user: res.data.user, loading: false })
       return { success: true }
     } catch (err) {
+      // If network error (server cold start), retry once after 3s
+      if (!err.response) {
+        try {
+          await new Promise(r => setTimeout(r, 3000))
+          const res = await api.post('/auth/login', { email, password })
+          if (res.data.token) localStorage.setItem('token', res.data.token)
+          set({ user: res.data.user, loading: false })
+          return { success: true }
+        } catch (retryErr) {
+          set({ loading: false })
+          return { success: false, status: retryErr.response?.status, message: retryErr.response?.data?.message || 'Server is waking up, please try again in a moment' }
+        }
+      }
       set({ loading: false })
       return { success: false, status: err.response?.status, message: err.response?.data?.message || 'Login failed' }
     }
