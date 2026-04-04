@@ -132,7 +132,7 @@ function FounderCard({ member, delay, inView }) {
       {/* Photo */}
       <div className="relative overflow-hidden rounded-t-3xl h-56 shrink-0">
         <img
-          src="/founder.jpg"
+          src="/founder.jpeg"
           alt="Mustansir Sanawadwala"
           className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105 hover:scale-105"
         />
