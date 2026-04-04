@@ -133,7 +133,7 @@ export default function Home() {
                 ))}
               </motion.div>
             </motion.div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Recently Viewed */}
