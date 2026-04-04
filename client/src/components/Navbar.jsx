@@ -5,12 +5,13 @@ import { useAuthStore } from '../store/authStore'
 import { useThemeStore } from '../store/themeStore'
 import { useListingStore } from '../store/listingStore'
 import { FiSearch, FiSun, FiMoon, FiPlus, FiMessageSquare, FiHeart, FiUser, FiLogOut, FiShield, FiMenu, FiX, FiAward } from 'react-icons/fi'
+import { RiMagicLine } from 'react-icons/ri'
 import SearchBar from './SearchBar'
 import NotificationBell from './NotificationBell'
 
 export default function Navbar() {
   const { user, logout } = useAuthStore()
-  const { dark, toggle } = useThemeStore()
+  const { dark, toggle, glass, toggleGlass } = useThemeStore()
   const { setFilters, fetchListings } = useListingStore()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -42,7 +43,7 @@ export default function Navbar() {
 
   return (
     <motion.nav initial={{ y: -64, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-sm' : 'bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800'}`}>
+      className={`sticky top-0 z-50 transition-all duration-300 ${glass ? 'glass-nav' : scrolled ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-sm' : 'bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800'}`}>
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
         <Link to="/" className="flex items-center gap-1.5 shrink-0">
           <img src="/logo.png" alt="MediCaps Market" className="w-14 h-14 object-contain mix-blend-screen" />
@@ -52,8 +53,13 @@ export default function Navbar() {
         <SearchBar />
 
         <div className="hidden md:flex items-center gap-2">
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={toggle} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={toggle} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition" title={dark ? 'Light mode' : 'Dark mode'}>
             {dark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={toggleGlass}
+            title={glass ? 'Default theme' : 'Liquid Glass theme'}
+            className={`p-2 rounded-xl transition ${glass ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300'}`}>
+            <RiMagicLine className="w-5 h-5" />
           </motion.button>
 
           {user ? (
@@ -105,6 +111,9 @@ export default function Navbar() {
             <div className="px-4 py-3 flex flex-col gap-1">
               <button onClick={toggle} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                 {dark ? <FiSun className="w-4 h-4" /> : <FiMoon className="w-4 h-4" />} {dark ? 'Light Mode' : 'Dark Mode'}
+              </button>
+              <button onClick={toggleGlass} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition ${glass ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+                <RiMagicLine className="w-4 h-4" /> {glass ? 'Default Theme' : 'Liquid Glass'}
               </button>
               {user ? (
                 <>

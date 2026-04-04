@@ -61,7 +61,7 @@ export default function ListingCard({ listing }) {
       <motion.div
         variants={listingCardVariant}
         whileHover={{ scale: 1.03, y: -4, boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.4)' }}
-        className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 transition-colors duration-300 cursor-pointer"
+        className="group glass-card bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 transition-colors duration-300 cursor-pointer"
       >
         <Link to={`/listing/${listing._id}`} onClick={handleClick}>
           <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800">
