@@ -10,6 +10,7 @@ import AnimatedPage from '../components/AnimatedPage'
 import DeveloperSection from '../components/DeveloperSection'
 import ScrollReveal from '../components/ScrollReveal'
 import WordReveal from '../components/WordReveal'
+import HeroCTA from '../components/HeroCTA'
 import { staggerContainer, fadeUp } from '../utils/animations'
 import { trackEvent } from '../utils/analytics'
 import { FiFilter, FiPlus, FiTrendingUp, FiBook, FiMonitor, FiHome, FiTruck, FiShoppingBag, FiUsers, FiZap, FiClock } from 'react-icons/fi'
@@ -95,12 +96,7 @@ export default function Home() {
 
               <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 flex-wrap">
                 {user ? (
-                  <Link to="/create-listing" onClick={() => trackEvent('post_listing_click', { source: 'hero' })}>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-2 px-7 py-3 bg-white text-blue-600 font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all">
-                      <FiPlus className="w-4 h-4" /> Post a Listing
-                    </motion.button>
-                  </Link>
+                  <HeroCTA to="/create-listing" onClick={() => trackEvent('post_listing_click', { source: 'hero' })} />
                 ) : (
                   <>
                     <Link to="/register">
