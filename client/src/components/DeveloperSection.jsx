@@ -134,7 +134,7 @@ function FounderCard({ member, delay, inView }) {
         <img
           src="/founder.jpeg"
           alt="Mustansir Sanawadwala"
-          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105 hover:scale-105"
+          className="w-full h-full object-cover object-bottom transition-transform duration-500 group-hover:scale-105 hover:scale-105"
         />
         {/* Gradient overlay at bottom of photo */}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-gray-900 to-transparent" />
