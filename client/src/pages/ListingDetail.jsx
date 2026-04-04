@@ -158,6 +158,13 @@ export default function ListingDetail() {
           <div className="flex gap-2 flex-wrap">
             <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">{listing.category}</span>
             <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm">{listing.condition}</span>
+            {listing.tags?.includes('urgent') && <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-sm font-medium">🔥 Urgent</span>}
+            {listing.tags?.includes('best-deal') && <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full text-sm font-medium">💰 Best Deal</span>}
+            {listing.expiresAt && new Date(listing.expiresAt) > new Date() && (
+              <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full text-xs">
+                Expires {new Date(listing.expiresAt).toLocaleDateString()}
+              </span>
+            )}
           </div>
 
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{listing.description}</p>

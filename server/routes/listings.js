@@ -10,7 +10,7 @@ const { protect } = require('../middleware/auth')
 router.get('/', async (req, res) => {
   try {
     const { search, category, condition, minPrice, maxPrice, sort, page = 1, limit = 12, seller } = req.query
-    const query = { isActive: true, status: { $ne: 'deleted' } }
+    const query = { isActive: true, status: { $ne: 'deleted' }, $or: [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }] }
 
     if (search) query.$text = { $search: search }
     if (category) query.category = category
@@ -62,7 +62,7 @@ router.post('/', protect, (req, res, next) => {
   listingUpload.array('images', 5)(req, res, next)
 }, async (req, res) => {
   try {
-    const { title, description, price, category, condition, location, negotiable } = req.body
+    const { title, description, price, category, condition, location, negotiable, tags } = req.body
     const { uploadImage } = require('../middleware/upload')
     const images = await Promise.all(
       (req.files || []).map(f => uploadImage(f.buffer, f.mimetype, 'listings'))
@@ -72,6 +72,7 @@ router.post('/', protect, (req, res, next) => {
       price: Number(price),
       category, condition, location,
       negotiable: negotiable === 'true' || negotiable === true,
+      tags: tags ? (Array.isArray(tags) ? tags : [tags]).filter(Boolean) : [],
       images,
       seller: req.user._id
     })
@@ -143,6 +144,21 @@ router.post('/:id/save', protect, async (req, res) => {
     }
     await user.save()
     res.json({ saved: idx === -1 })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// Update listing tags
+router.patch('/:id/tags', protect, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id)
+    if (!listing) return res.status(404).json({ message: 'Not found' })
+    if (listing.seller.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' })
+    const { tags } = req.body
+    listing.tags = (Array.isArray(tags) ? tags : [tags]).filter(t => ['urgent', 'best-deal'].includes(t))
+    await listing.save()
+    res.json({ listing })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }

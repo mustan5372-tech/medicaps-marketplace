@@ -21,6 +21,7 @@ export default function CreateListing() {
   const [images, setImages] = useState([])
   const [previews, setPreviews] = useState([])
   const [showWarning, setShowWarning] = useState(false)
+  const [selectedTags, setSelectedTags] = useState([])
   const [form, setForm] = useState({
     title: '', description: '', price: '',
     category: 'Books', condition: 'Used',
@@ -61,6 +62,7 @@ export default function CreateListing() {
       const formData = new FormData()
       Object.entries(form).forEach(([k, v]) => formData.append(k, v))
       images.forEach(img => formData.append('images', img))
+      selectedTags.forEach(tag => formData.append('tags', tag))
       const res = await api.post('/listings', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
       analytics.postListing(form.category, form.price)
       toast.success('Listing posted!')
@@ -150,6 +152,22 @@ export default function CreateListing() {
           <select value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} className="input">
             {LOCATIONS.map(l => <option key={l}>{l}</option>)}
           </select>
+        </div>
+
+        {/* Tags */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Tags <span className="text-gray-400 font-normal">(optional)</span></label>
+          <div className="flex gap-2 flex-wrap">
+            {[{ value: 'urgent', label: '🔥 Urgent', color: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800' },
+              { value: 'best-deal', label: '💰 Best Deal', color: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800' }
+            ].map(tag => (
+              <button key={tag.value} type="button"
+                onClick={() => setSelectedTags(prev => prev.includes(tag.value) ? prev.filter(t => t !== tag.value) : [...prev, tag.value])}
+                className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition ${selectedTags.includes(tag.value) ? tag.color : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'}`}>
+                {tag.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={loading || compressing}

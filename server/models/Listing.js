@@ -18,6 +18,8 @@ const listingSchema = new mongoose.Schema({
   views: { type: Number, default: 0 },
   isBoosted: { type: Boolean, default: false },
   boostExpiresAt: { type: Date, default: null },
+  expiresAt: { type: Date, default: () => new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) },
+  tags: [{ type: String, enum: ['urgent', 'best-deal'] }],
 }, { timestamps: true })
 
 listingSchema.index({ title: 'text', description: 'text' })

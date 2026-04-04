@@ -104,6 +104,16 @@ export default function ListingCard({ listing }) {
                 ⚡ Boosted
               </span>
             )}
+            {listing.tags?.includes('urgent') && (
+              <span className="absolute bottom-10 left-3 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-red-500/90 text-white backdrop-blur-sm">
+                🔥 Urgent
+              </span>
+            )}
+            {listing.tags?.includes('best-deal') && (
+              <span className="absolute bottom-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-green-500/90 text-white backdrop-blur-sm">
+                💰 Best Deal
+              </span>
+            )}
 
             {/* Admin controls */}
             {isAdmin && (
