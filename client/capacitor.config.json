@@ -1,0 +1,15 @@
+{
+  "appId": "com.medicaps.marketplace",
+  "appName": "MediCaps Marketplace",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://medicapsmart.vercel.app",
+    "cleartext": true,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#030712"
+  }
+}
