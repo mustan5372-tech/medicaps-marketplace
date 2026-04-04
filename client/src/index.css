@@ -2,14 +2,287 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   DESIGN TOKEN SYSTEM
+   Default tokens — used by all components
+   ============================================ */
+:root {
+  --bg-page:        #f9fafb;
+  --bg-primary:     #ffffff;
+  --bg-secondary:   #f3f4f6;
+  --bg-elevated:    #ffffff;
+  --border:         #e5e7eb;
+  --border-subtle:  #f3f4f6;
+  --text-primary:   #111827;
+  --text-secondary: #6b7280;
+  --text-muted:     #9ca3af;
+  --accent:         #2563eb;
+  --accent-glow:    rgba(37, 99, 235, 0.25);
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:      0 10px 32px rgba(0,0,0,0.10);
+  --radius:         1rem;
+  --blur:           none;
+  --surface-alpha:  1;
+}
+
+.dark {
+  --bg-page:        #030712;
+  --bg-primary:     #111827;
+  --bg-secondary:   #1f2937;
+  --bg-elevated:    #1f2937;
+  --border:         #374151;
+  --border-subtle:  #1f2937;
+  --text-primary:   #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted:     #6b7280;
+  --accent:         #3b82f6;
+  --accent-glow:    rgba(59, 130, 246, 0.3);
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg:      0 10px 32px rgba(0,0,0,0.5);
+}
+
+/* ============================================
+   GLASS THEME TOKENS
+   Overrides every token when glass is active
+   ============================================ */
+html[data-glass="true"] {
+  --bg-page:        transparent;
+  --bg-primary:     rgba(255,255,255,0.18);
+  --bg-secondary:   rgba(255,255,255,0.10);
+  --bg-elevated:    rgba(255,255,255,0.22);
+  --border:         rgba(255,255,255,0.28);
+  --border-subtle:  rgba(255,255,255,0.14);
+  --text-primary:   #0f172a;
+  --text-secondary: rgba(15,23,42,0.70);
+  --text-muted:     rgba(15,23,42,0.45);
+  --accent:         #6366f1;
+  --accent-glow:    rgba(99,102,241,0.45);
+  --shadow-sm:      0 2px 8px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.5);
+  --shadow-md:      0 8px 32px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.4);
+  --shadow-lg:      0 20px 60px rgba(99,102,241,0.20), inset 0 1px 0 rgba(255,255,255,0.5);
+  --blur:           blur(20px) saturate(180%);
+  --surface-alpha:  0.18;
+
+  /* Vivid gradient page background */
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(139,92,246,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 10%, rgba(59,130,246,0.30) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(236,72,153,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 10% 80%, rgba(16,185,129,0.20) 0%, transparent 50%),
+    linear-gradient(135deg, #ddd6fe 0%, #e0f2fe 40%, #fce7f3 70%, #d1fae5 100%) !important;
+  background-attachment: fixed !important;
+}
+
+html[data-glass="true"].dark {
+  --bg-primary:     rgba(255,255,255,0.06);
+  --bg-secondary:   rgba(255,255,255,0.04);
+  --bg-elevated:    rgba(255,255,255,0.09);
+  --border:         rgba(255,255,255,0.12);
+  --border-subtle:  rgba(255,255,255,0.06);
+  --text-primary:   #f1f5f9;
+  --text-secondary: rgba(241,245,249,0.65);
+  --text-muted:     rgba(241,245,249,0.40);
+  --accent:         #818cf8;
+  --accent-glow:    rgba(129,140,248,0.50);
+  --shadow-sm:      0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  --shadow-md:      0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  --shadow-lg:      0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(139,92,246,0.30) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 10%, rgba(59,130,246,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 65% 85%, rgba(236,72,153,0.20) 0%, transparent 50%),
+    linear-gradient(135deg, #0f0c29 0%, #1e1b4b 40%, #1a1a3e 70%, #0c1445 100%) !important;
+  background-attachment: fixed !important;
+}
+
+html[data-glass="true"] body,
+html[data-glass="true"].dark body {
+  background: transparent !important;
+}
+
+/* ============================================
+   TOKEN-DRIVEN COMPONENT OVERRIDES
+   These use the tokens so ALL components
+   transform automatically
+   ============================================ */
+
+/* Page wrapper */
+html[data-glass="true"] .min-h-screen {
+  background: transparent !important;
+}
+
+/* Every white/gray card surface */
+html[data-glass="true"] .bg-white,
+html[data-glass="true"] .dark\:bg-gray-900,
+html[data-glass="true"] .bg-gray-50,
+html[data-glass="true"] .bg-gray-100 {
+  background: var(--bg-primary) !important;
+  backdrop-filter: var(--blur) !important;
+  -webkit-backdrop-filter: var(--blur) !important;
+}
+
+html[data-glass="true"].dark .bg-white,
+html[data-glass="true"].dark .dark\:bg-gray-900,
+html[data-glass="true"].dark .bg-gray-50,
+html[data-glass="true"].dark .bg-gray-100,
+html[data-glass="true"].dark .dark\:bg-gray-800,
+html[data-glass="true"].dark .dark\:bg-gray-950 {
+  background: var(--bg-primary) !important;
+  backdrop-filter: var(--blur) !important;
+  -webkit-backdrop-filter: var(--blur) !important;
+}
+
+/* Borders */
+html[data-glass="true"] .border-gray-100,
+html[data-glass="true"] .border-gray-200,
+html[data-glass="true"] .dark\:border-gray-700,
+html[data-glass="true"] .dark\:border-gray-800 {
+  border-color: var(--border) !important;
+}
+
+/* Text */
+html[data-glass="true"] .text-gray-900,
+html[data-glass="true"] .dark\:text-white {
+  color: var(--text-primary) !important;
+}
+
+html[data-glass="true"] .text-gray-500,
+html[data-glass="true"] .text-gray-400,
+html[data-glass="true"] .dark\:text-gray-400 {
+  color: var(--text-secondary) !important;
+}
+
+/* Inputs */
+html[data-glass="true"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-glass="true"] textarea,
+html[data-glass="true"] select {
+  background: rgba(255,255,255,0.30) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5) !important;
+}
+
+html[data-glass="true"].dark input:not([type="checkbox"]):not([type="radio"]),
+html[data-glass="true"].dark textarea,
+html[data-glass="true"].dark select {
+  background: rgba(255,255,255,0.07) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-glass="true"] input::placeholder,
+html[data-glass="true"] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Navbar */
+html[data-glass="true"] nav {
+  background: rgba(255,255,255,0.50) !important;
+  backdrop-filter: blur(28px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6), 0 4px 24px rgba(99,102,241,0.08) !important;
+}
+
+html[data-glass="true"].dark nav {
+  background: rgba(10,10,25,0.55) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.3) !important;
+}
+
+/* Primary buttons */
+html[data-glass="true"] .bg-blue-600,
+html[data-glass="true"] .bg-gradient-to-r.from-blue-600 {
+  background: linear-gradient(135deg, rgba(99,102,241,0.85), rgba(139,92,246,0.85)) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  box-shadow: 0 4px 20px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.25) !important;
+}
+
+html[data-glass="true"] .bg-blue-600:hover,
+html[data-glass="true"] .bg-gradient-to-r.from-blue-600:hover {
+  box-shadow: 0 8px 32px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.3) !important;
+}
+
+/* Dropdown menus / modals */
+html[data-glass="true"] .shadow-xl,
+html[data-glass="true"] .shadow-2xl {
+  background: rgba(255,255,255,0.65) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+html[data-glass="true"].dark .shadow-xl,
+html[data-glass="true"].dark .shadow-2xl {
+  background: rgba(15,15,30,0.70) !important;
+}
+
+/* Hover states on icon buttons */
+html[data-glass="true"] .hover\:bg-gray-100:hover,
+html[data-glass="true"] .dark\:hover\:bg-gray-800:hover {
+  background: rgba(255,255,255,0.30) !important;
+}
+
+html[data-glass="true"].dark .hover\:bg-gray-100:hover,
+html[data-glass="true"].dark .dark\:hover\:bg-gray-800:hover {
+  background: rgba(255,255,255,0.10) !important;
+}
+
+/* Skeleton in glass mode */
+html[data-glass="true"] .skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.15) 25%,
+    rgba(255,255,255,0.30) 50%,
+    rgba(255,255,255,0.15) 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+/* .input utility class */
+html[data-glass="true"] .input {
+  background: rgba(255,255,255,0.28) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 2px 8px rgba(99,102,241,0.08) !important;
+}
+
+html[data-glass="true"].dark .input {
+  background: rgba(255,255,255,0.06) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+/* ============================================
+   SMOOTH GLOBAL TRANSITION ON THEME SWITCH
+   ============================================ */
+*, *::before, *::after {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    color 0.2s ease;
+}
+
+/* But don't slow down animations */
+.motion-safe\:transition-none,
+[data-framer-motion] {
+  transition: none !important;
+}
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
   }
-  .dark body {
-    @apply bg-gray-950 text-gray-100;
-  }
+
   html.dark {
     background-color: #030712;
   }
@@ -55,115 +328,4 @@
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
-}
-
-/* ============================================
-   LIQUID GLASS THEME
-   Applied when html has data-glass="true"
-   ============================================ */
-
-html[data-glass="true"] {
-  --glass-bg: rgba(255, 255, 255, 0.12);
-  --glass-bg-card: rgba(255, 255, 255, 0.10);
-  --glass-border: rgba(255, 255, 255, 0.22);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --glass-blur: blur(18px);
-  --glass-text: #1a1a2e;
-  --glass-text-muted: rgba(26, 26, 46, 0.65);
-  background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 30%, #fce7f3 60%, #e0f2fe 100%) !important;
-  background-attachment: fixed !important;
-}
-
-html[data-glass="true"].dark {
-  --glass-bg: rgba(15, 15, 30, 0.45);
-  --glass-bg-card: rgba(20, 20, 40, 0.40);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --glass-text: #f0f4ff;
-  --glass-text-muted: rgba(240, 244, 255, 0.6);
-  background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%) !important;
-  background-attachment: fixed !important;
-}
-
-/* Page background */
-html[data-glass="true"] body,
-html[data-glass="true"].dark body {
-  background: transparent !important;
-}
-
-/* Glass card utility */
-html[data-glass="true"] .glass-card {
-  background: var(--glass-bg-card) !important;
-  backdrop-filter: var(--glass-blur) !important;
-  -webkit-backdrop-filter: var(--glass-blur) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  transition: background 0.3s ease, box-shadow 0.3s ease;
-}
-
-html[data-glass="true"] .glass-card:hover {
-  background: rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 16px 48px rgba(99, 102, 241, 0.18) !important;
-}
-
-html[data-glass="true"].dark .glass-card:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 16px 48px rgba(99, 102, 241, 0.25) !important;
-}
-
-/* Glass navbar */
-html[data-glass="true"] .glass-nav {
-  background: rgba(255, 255, 255, 0.55) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border-bottom: 1px solid var(--glass-border) !important;
-  box-shadow: 0 1px 24px rgba(99, 102, 241, 0.08) !important;
-}
-
-html[data-glass="true"].dark .glass-nav {
-  background: rgba(15, 15, 30, 0.6) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-}
-
-/* Glass input */
-html[data-glass="true"] .glass-input {
-  background: rgba(255, 255, 255, 0.35) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid var(--glass-border) !important;
-  color: var(--glass-text) !important;
-}
-
-html[data-glass="true"].dark .glass-input {
-  background: rgba(255, 255, 255, 0.06) !important;
-  color: #f0f4ff !important;
-}
-
-html[data-glass="true"] .glass-input::placeholder {
-  color: var(--glass-text-muted) !important;
-}
-
-/* Glass button */
-html[data-glass="true"] .glass-btn {
-  background: rgba(99, 102, 241, 0.75) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(99, 102, 241, 0.4) !important;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255,255,255,0.2) !important;
-  transition: all 0.25s ease !important;
-}
-
-html[data-glass="true"] .glass-btn:hover {
-  background: rgba(99, 102, 241, 0.9) !important;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45), inset 0 1px 0 rgba(255,255,255,0.25) !important;
-}
-
-/* Smooth theme transition */
-html[data-glass="true"] *,
-html[data-glass="true"] *::before,
-html[data-glass="true"] *::after {
-  transition-property: background-color, border-color, box-shadow, backdrop-filter;
-  transition-duration: 0.3s;
-  transition-timing-function: ease;
 }

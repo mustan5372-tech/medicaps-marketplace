@@ -79,11 +79,18 @@ export default function App() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen transition-colors duration-300">
       <BrowserRouter>
         <Navbar />
         <Toaster position="top-right" toastOptions={{ duration: 3000,
-          style: { borderRadius: '12px', background: dark ? '#1f2937' : '#fff', color: dark ? '#f9fafb' : '#111827' }
+          style: {
+            borderRadius: '12px',
+            background: glass ? 'rgba(255,255,255,0.65)' : dark ? '#1f2937' : '#fff',
+            color: dark && !glass ? '#f9fafb' : '#111827',
+            backdropFilter: glass ? 'blur(20px)' : 'none',
+            border: glass ? '1px solid rgba(255,255,255,0.3)' : 'none',
+            boxShadow: glass ? '0 8px 32px rgba(99,102,241,0.15)' : undefined,
+          }
         }} />
         <AnimatedRoutes />
         <FloatingPostButton />
