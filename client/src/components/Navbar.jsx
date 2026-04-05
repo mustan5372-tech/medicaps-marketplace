@@ -10,6 +10,7 @@ import SearchBar from './SearchBar'
 import NotificationBell from './NotificationBell'
 import ActivityBar from './ActivityBar'
 import AnnouncementBanner from './AnnouncementBanner'
+import { useMagnet } from '../hooks/useMagnet'
 
 export default function Navbar() {
   const { user, logout } = useAuthStore()
@@ -21,6 +22,7 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const profileRef = useRef(null)
+  const sellMagnet = useMagnet({ strength: 0.18 })
 
   useEffect(() => {
     const h = (e) => { if (!profileRef.current?.contains(e.target)) setProfileOpen(false) }
@@ -67,7 +69,8 @@ export default function Navbar() {
           {user ? (
             <>
               <Link to="/create-listing">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }} className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/25 transition-all">
+                <motion.button ref={sellMagnet.ref} style={{ x: sellMagnet.x, y: sellMagnet.y }} {...sellMagnet.handlers}
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }} className="relative overflow-hidden flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/25 transition-all">
                   <FiPlus className="w-4 h-4" /> Sell
                 </motion.button>
               </Link>

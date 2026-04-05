@@ -2,20 +2,18 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiArrowRight } from 'react-icons/fi'
+import { useMagnet } from '../hooks/useMagnet'
 
 export default function HeroCTA({ to = '/create-listing', onClick }) {
   const [hovered, setHovered] = useState(false)
+  const { ref, x, y, handlers } = useMagnet({ strength: 0.2 })
 
   return (
     <Link to={to} onClick={onClick}>
       <motion.button
-        onHoverStart={() => setHovered(true)}
-        onHoverEnd={() => setHovered(false)}
-        whileHover={{ scale: 1.045 }}
-        whileTap={{ scale: 0.96 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-        className="relative group flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-bold text-sm text-white overflow-hidden"
+        ref={ref}
         style={{
+          x, y,
           background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.08) 100%)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
@@ -24,6 +22,12 @@ export default function HeroCTA({ to = '/create-listing', onClick }) {
             ? '0 0 0 1px rgba(255,255,255,0.2), 0 8px 32px rgba(255,255,255,0.25), 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.4)'
             : '0 0 0 1px rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
         }}
+        {...handlers}
+        onHoverStart={() => setHovered(true)}
+        onHoverEnd={() => setHovered(false)}
+        whileHover={{ scale: 1.045 }}
+        whileTap={{ scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 22 }}
       >
         {/* Animated gradient fill behind content */}
         <motion.span
