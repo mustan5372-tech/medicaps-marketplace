@@ -329,3 +329,29 @@ html[data-glass="true"].dark .input {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+/* ============================================
+   SCROLL & ANIMATION PERFORMANCE
+   ============================================ */
+
+/* CSS smooth scroll fallback (for browsers without Lenis) */
+html {
+  scroll-behavior: smooth;
+}
+
+/* GPU-accelerate elements that animate on scroll */
+.group,
+[data-framer-motion],
+.skeleton {
+  will-change: transform;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}

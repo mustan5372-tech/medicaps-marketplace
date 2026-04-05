@@ -10,6 +10,7 @@ import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import FloatingPostButton from './components/FloatingPostButton'
+import ScrollProgress from './components/ScrollProgress'
 
 // Lazy load all pages — splits into separate chunks
 const Home           = lazy(() => import('./pages/Home'))
@@ -92,6 +93,7 @@ export default function App() {
   return (
     <div className="min-h-screen transition-colors duration-300">
       <BrowserRouter>
+        <ScrollProgress />
         <Navbar />
         <Toaster position="top-right" toastOptions={{ duration: 3000,
           style: {

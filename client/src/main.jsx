@@ -5,12 +5,14 @@ import './index.css'
 import Lenis from '@studio-freight/lenis'
 
 // Smooth scroll — tuned for premium inertia feel
+// Disable on touch devices — native momentum scroll is better on mobile
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 const lenis = new Lenis({
   duration: 1.1,
   easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  smoothWheel: true,
+  smoothWheel: !isMobile,
   wheelMultiplier: 0.9,
-  touchMultiplier: 1.5,
+  touchMultiplier: isMobile ? 1 : 1.5,
   infinite: false,
 })
 function raf(time) { lenis.raf(time); requestAnimationFrame(raf) }
