@@ -1,27 +1,31 @@
-import { useEffect, useState } from 'react'
-import { motion, useSpring } from 'framer-motion'
+import { useEffect } from 'react'
+import { motion, useMotionValue, useSpring } from 'framer-motion'
 
+// Uses motionValue directly — zero React re-renders on scroll
 export default function ScrollProgress() {
-  const [progress, setProgress] = useState(0)
-  const spring = useSpring(progress, { stiffness: 200, damping: 30, restDelta: 0.001 })
+  const raw = useMotionValue(0)
+  const scaleX = useSpring(raw, { stiffness: 220, damping: 32, restDelta: 0.001 })
 
   useEffect(() => {
+    let rafId
     const update = () => {
       const el = document.documentElement
       const scrolled = el.scrollTop || document.body.scrollTop
       const total = el.scrollHeight - el.clientHeight
-      setProgress(total > 0 ? scrolled / total : 0)
+      raw.set(total > 0 ? scrolled / total : 0)
     }
-    window.addEventListener('scroll', update, { passive: true })
-    return () => window.removeEventListener('scroll', update)
-  }, [])
+    const onScroll = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(update) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(rafId) }
+  }, [raw])
 
   return (
     <motion.div
       className="fixed top-0 left-0 right-0 h-[2px] z-[9999] origin-left pointer-events-none"
       style={{
-        scaleX: spring,
+        scaleX,
         background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)',
+        willChange: 'transform',
       }}
     />
   )

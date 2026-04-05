@@ -1,7 +1,7 @@
 // Premium Framer Motion variants
 
-export const transitionTheme = { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
-export const transitionSlow  = { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }
+export const transitionTheme = { duration: 0.25, ease: [0.22, 1, 0.36, 1] }
+export const transitionSlow  = { duration: 0.42, ease: [0.25, 0.46, 0.45, 0.94] }
 export const transitionSpring = { type: 'spring', stiffness: 280, damping: 28 }
 
 export const fadeUp = {
@@ -48,10 +48,10 @@ export const pageTransition = {
 
 // Listing card — lift + shadow on scroll reveal
 export const listingCardVariant = {
-  hidden: { opacity: 0, y: 28, scale: 0.97 },
+  hidden: { opacity: 0, y: 20 },
   show: {
-    opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] }
+    opacity: 1, y: 0,
+    transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] }
   }
 }
 
@@ -93,12 +93,11 @@ export const wordVariant = {
 export const sectionReveal = (direction = 'up', delay = 0) => ({
   hidden: {
     opacity: 0,
-    y:  direction === 'up'    ?  40 : direction === 'down'  ? -40 : 0,
-    x:  direction === 'left'  ?  40 : direction === 'right' ? -40 : 0,
-    scale: 0.97,
+    y:  direction === 'up'    ?  32 : direction === 'down'  ? -32 : 0,
+    x:  direction === 'left'  ?  32 : direction === 'right' ? -32 : 0,
   },
   show: {
-    opacity: 1, y: 0, x: 0, scale: 1,
-    transition: { duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }
+    opacity: 1, y: 0, x: 0,
+    transition: { duration: 0.45, delay, ease: [0.25, 0.46, 0.45, 0.94] }
   }
 })
