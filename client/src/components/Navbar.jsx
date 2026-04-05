@@ -122,6 +122,9 @@ export default function Navbar() {
                   <Link to="/chat" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiMessageSquare className="w-4 h-4" /> Messages</Link>
                   <Link to="/saved" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiHeart className="w-4 h-4" /> Saved</Link>
                   <Link to={`/profile/${user._id}`} onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiUser className="w-4 h-4" /> Profile</Link>
+                  {user.role === 'admin' && (
+                    <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition font-medium"><FiShield className="w-4 h-4" /> Admin Panel</Link>
+                  )}
                   <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition"><FiLogOut className="w-4 h-4" /> Logout</button>
                 </>
               ) : (
