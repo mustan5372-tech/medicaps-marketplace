@@ -9,6 +9,7 @@ import { RiMagicLine } from 'react-icons/ri'
 import SearchBar from './SearchBar'
 import NotificationBell from './NotificationBell'
 import ActivityBar from './ActivityBar'
+import AnnouncementBanner from './AnnouncementBanner'
 
 export default function Navbar() {
   const { user, logout } = useAuthStore()
@@ -138,6 +139,7 @@ export default function Navbar() {
         )}
       </AnimatePresence>
       <ActivityBar />
+      <AnnouncementBanner />
     </motion.nav>
   )
 }

@@ -23,12 +23,25 @@ router.post('/register', async (req, res) => {
 
     const isEmailConfigured = process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your@gmail.com'
     const verifyToken = crypto.randomBytes(32).toString('hex')
+    const referralCode = crypto.randomBytes(4).toString('hex').toUpperCase()
 
-    await User.create({
+    const createData = {
       name, email, password, verifyToken,
       verifyTokenExpiry: Date.now() + 24 * 60 * 60 * 1000,
       isVerified: !isEmailConfigured,
-    })
+      referralCode,
+    }
+
+    // Handle referral
+    if (req.body.referralCode) {
+      const referrer = await User.findOne({ referralCode: req.body.referralCode })
+      if (referrer) {
+        createData.referredBy = referrer._id
+        await User.findByIdAndUpdate(referrer._id, { $inc: { referralCount: 1 } })
+      }
+    }
+
+    await User.create(createData)
 
     if (isEmailConfigured) {
       await sendVerificationEmail(email, verifyToken)

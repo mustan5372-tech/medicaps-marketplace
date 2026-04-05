@@ -22,6 +22,7 @@ export default function CreateListing() {
   const [previews, setPreviews] = useState([])
   const [showWarning, setShowWarning] = useState(false)
   const [selectedTags, setSelectedTags] = useState([])
+  const [hashtags, setHashtags] = useState('')
   const [form, setForm] = useState({
     title: '', description: '', price: '',
     category: 'Books', condition: 'Used',
@@ -63,6 +64,7 @@ export default function CreateListing() {
       Object.entries(form).forEach(([k, v]) => formData.append(k, v))
       images.forEach(img => formData.append('images', img))
       selectedTags.forEach(tag => formData.append('tags', tag))
+      hashtags.split(/[\s,]+/).filter(h => h.startsWith('#')).forEach(h => formData.append('hashtags', h.replace('#', '')))
       const res = await api.post('/listings', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
       analytics.postListing(form.category, form.price)
       toast.success('Listing posted!')
@@ -168,6 +170,14 @@ export default function CreateListing() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Hashtags <span className="text-gray-400 font-normal">(optional)</span></label>
+          <input value={hashtags} onChange={e => setHashtags(e.target.value)}
+            placeholder="#hostel #semester5 #urgent"
+            className="input" />
+          <p className="text-xs text-gray-400 mt-1">Separate with spaces. Start each with #</p>
         </div>
 
         <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={loading || compressing}

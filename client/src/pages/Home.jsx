@@ -33,6 +33,7 @@ export default function Home() {
   const { user } = useAuthStore()
   const [showFilter, setShowFilter] = useState(false)
   const [recentlyViewed, setRecentlyViewed] = useState([])
+  const [hotListings, setHotListings] = useState([])
   const totalPages = Math.ceil(total / 12)
 
   // Parallax for hero orbs
@@ -53,6 +54,7 @@ export default function Home() {
           .then(results => setRecentlyViewed(results.filter(Boolean)))
       }
     } catch {}
+    api.get('/listings/hot/now').then(r => setHotListings(r.data.listings || [])).catch(() => {})
   }, [])
 
   return (
@@ -145,6 +147,20 @@ export default function Home() {
             </div>
             <motion.div variants={staggerContainer(0.08)} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {recentlyViewed.map(l => <ListingCard key={l._id} listing={l} />)}
+            </motion.div>
+          </ScrollReveal>
+        )}
+
+        {/* Hot Right Now */}
+        {hotListings.length > 0 && (
+          <ScrollReveal className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-base">🔥</span>
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Hot right now</h2>
+              <span className="text-xs text-gray-400">— most viewed in 24h</span>
+            </div>
+            <motion.div variants={staggerContainer(0.06)} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {hotListings.slice(0, 4).map(l => <ListingCard key={l._id} listing={l} />)}
             </motion.div>
           </ScrollReveal>
         )}

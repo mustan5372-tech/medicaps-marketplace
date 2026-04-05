@@ -23,6 +23,8 @@ export default function ListingDetail() {
   const { startConversation } = useChatStore()
   const [imgIdx, setImgIdx] = useState(0)
   const [saved, setSaved] = useState(false)
+  const [interested, setInterested] = useState(false)
+  const [interestCount, setInterestCount] = useState(0)
   const [reportModal, setReportModal] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [similarListings, setSimilarListings] = useState([])
@@ -31,6 +33,8 @@ export default function ListingDetail() {
   useEffect(() => {
     if (listing) {
       setSaved(listing.savedBy?.includes(user?._id))
+      setInterested(listing.interestedBy?.includes(user?._id))
+      setInterestCount(listing.interestedBy?.length || 0)
       analytics.viewListing(listing._id, listing.title, listing.price)
       // Fetch similar listings
       api.get(`/listings?category=${listing.category}&limit=4`)
@@ -166,6 +170,13 @@ export default function ListingDetail() {
               </span>
             )}
           </div>
+          {listing.hashtags?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {listing.hashtags.map(h => (
+                <span key={h} className="text-xs text-blue-500 dark:text-blue-400 hover:underline cursor-pointer">#{h}</span>
+              ))}
+            </div>
+          )}
 
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{listing.description}</p>
 
@@ -238,10 +249,25 @@ export default function ListingDetail() {
               <FiCheckCircle className="w-5 h-5" /> This item has been sold
             </div>
           ) : (
-            <motion.button whileTap={{ scale: 0.97 }} onClick={handleContact}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition">
-              <FiMessageSquare className="w-5 h-5" /> Chat with Seller
-            </motion.button>
+            <div className="space-y-3">
+              <motion.button whileTap={{ scale: 0.97 }} onClick={handleContact}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition">
+                <FiMessageSquare className="w-5 h-5" /> Chat with Seller
+              </motion.button>
+              {user && (
+                <motion.button whileTap={{ scale: 0.97 }} onClick={async () => {
+                  if (!user) { toast.error('Login to show interest'); return }
+                  const res = await api.post(`/listings/${id}/interest`)
+                  setInterested(res.data.interested)
+                  setInterestCount(res.data.count)
+                  toast.success(res.data.interested ? 'Marked as interested!' : 'Interest removed')
+                }}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm transition border ${interested ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-purple-400'}`}>
+                  🙋 {interested ? 'Interested' : 'Mark as Interested'}
+                  {interestCount > 0 && <span className="text-xs opacity-70">· {interestCount} interested</span>}
+                </motion.button>
+              )}
+            </div>
           )}
         </div>
       </div>

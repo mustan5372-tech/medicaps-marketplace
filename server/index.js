@@ -80,6 +80,15 @@ app.use('/api/leaderboard', leaderboardRoutes)
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')))
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }))
 
+// Public announcements
+app.get('/api/announcements', async (req, res) => {
+  try {
+    const Announcement = require('./models/Announcement')
+    const announcements = await Announcement.find({ active: true }).sort({ createdAt: -1 }).limit(3)
+    res.json({ announcements })
+  } catch { res.json({ announcements: [] }) }
+})
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack)

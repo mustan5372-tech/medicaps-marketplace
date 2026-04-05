@@ -20,6 +20,8 @@ const listingSchema = new mongoose.Schema({
   boostExpiresAt: { type: Date, default: null },
   expiresAt: { type: Date, default: () => new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) },
   tags: [{ type: String, enum: ['urgent', 'best-deal'] }],
+  interestedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  hashtags: [{ type: String, trim: true, lowercase: true }],
 }, { timestamps: true })
 
 listingSchema.index({ title: 'text', description: 'text' })

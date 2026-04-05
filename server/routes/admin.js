@@ -4,6 +4,7 @@ const User = require('../models/User')
 const Report = require('../models/Report')
 const Conversation = require('../models/Conversation')
 const Message = require('../models/Message')
+const Announcement = require('../models/Announcement')
 const { protect, adminOnly } = require('../middleware/auth')
 
 router.use(protect, adminOnly)
@@ -128,6 +129,36 @@ router.put('/reports/:id/resolve', async (req, res) => {
   try {
     await Report.findByIdAndUpdate(req.params.id, { resolved: true })
     res.json({ message: 'Resolved' })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+// Announcements
+router.get('/announcements', async (req, res) => {
+  try {
+    const announcements = await Announcement.find({ active: true }).sort({ createdAt: -1 }).limit(5)
+    res.json({ announcements })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+router.post('/announcements', async (req, res) => {
+  try {
+    const ann = await Announcement.create({ ...req.body, createdBy: req.user._id })
+    res.status(201).json({ announcement: ann })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+router.delete('/announcements/:id', async (req, res) => {
+  try {
+    await Announcement.findByIdAndUpdate(req.params.id, { active: false })
+    res.json({ success: true })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+// Verify seller
+router.patch('/users/:id/verify-seller', async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, { isSellerVerified: true }, { new: true })
+    res.json({ user })
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 

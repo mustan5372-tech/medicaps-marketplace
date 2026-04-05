@@ -193,4 +193,30 @@ router.post('/:id/report', protect, async (req, res) => {
   }
 })
 
+// Toggle interest on listing
+router.post('/:id/interest', protect, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id)
+    if (!listing) return res.status(404).json({ message: 'Not found' })
+    const uid = req.user._id
+    const idx = listing.interestedBy.indexOf(uid)
+    if (idx > -1) listing.interestedBy.splice(idx, 1)
+    else listing.interestedBy.push(uid)
+    await listing.save()
+    res.json({ interested: idx === -1, count: listing.interestedBy.length })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+// Hot right now — most views in last 24h
+router.get('/hot/now', async (req, res) => {
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const listings = await Listing.find({
+      isActive: true, status: { $ne: 'deleted' },
+      updatedAt: { $gte: since }
+    }).sort({ views: -1 }).limit(8).populate('seller', 'name avatar')
+    res.json({ listings })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
 module.exports = router

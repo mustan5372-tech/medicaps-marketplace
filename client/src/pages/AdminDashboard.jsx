@@ -21,20 +21,25 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [flagModal, setFlagModal] = useState(null)
   const [flagReason, setFlagReason] = useState('')
+  const [announcements, setAnnouncements] = useState([])
+  const [newAnnouncement, setNewAnnouncement] = useState('')
+  const [annType, setAnnType] = useState('info')
 
   const load = async () => {
     setLoading(true)
     try {
-      const [sRes, lRes, uRes, rRes] = await Promise.all([
+      const [sRes, lRes, uRes, rRes, aRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/listings'),
         api.get('/admin/users'),
         api.get('/admin/reports'),
+        api.get('/admin/announcements'),
       ])
       setStats(sRes.data)
       setListings(lRes.data.listings)
       setUsers(uRes.data.users)
       setReports(rRes.data.reports)
+      setAnnouncements(aRes.data.announcements || [])
     } catch {}
     setLoading(false)
   }
@@ -112,6 +117,7 @@ export default function AdminDashboard() {
           { id: 'flagged', label: 'Flagged', icon: FiFlag, count: listings.filter(l => l.isFlagged).length },
           { id: 'users', label: 'Users', icon: FiUsers, count: users.length },
           { id: 'reports', label: 'Reports', icon: FiAlertTriangle, count: reports.length },
+          { id: 'announcements', label: 'Announcements', icon: FiShield, count: announcements.length },
         ].map(t => (
           <motion.button key={t.id} whileTap={{ scale: 0.95 }} onClick={() => setTab(t.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition shrink-0 ${tab === t.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-400'}`}>
@@ -184,10 +190,21 @@ export default function AdminDashboard() {
                     <p className="text-sm text-gray-500">{u.email}</p>
                   </div>
                   {u.role !== 'admin' && (
-                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => toggleBan(u)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-xl transition ${u.banned ? 'bg-green-50 dark:bg-green-900/20 text-green-600 hover:bg-green-100' : 'bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-100'}`}>
-                      <FiUserX className="w-4 h-4" /> {u.banned ? 'Unban' : 'Ban'}
-                    </motion.button>
+                    <div className="flex gap-2">
+                      {!u.isSellerVerified && (
+                        <motion.button whileTap={{ scale: 0.9 }} onClick={async () => {
+                          await api.patch(`/admin/users/${u._id}/verify-seller`)
+                          setUsers(prev => prev.map(x => x._id === u._id ? { ...x, isSellerVerified: true } : x))
+                          toast.success('Seller verified')
+                        }} className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl hover:bg-blue-100 transition">
+                          ✓ Verify
+                        </motion.button>
+                      )}
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => toggleBan(u)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-xl transition ${u.banned ? 'bg-green-50 dark:bg-green-900/20 text-green-600 hover:bg-green-100' : 'bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-100'}`}>
+                        <FiUserX className="w-4 h-4" /> {u.banned ? 'Unban' : 'Ban'}
+                      </motion.button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -227,6 +244,49 @@ export default function AdminDashboard() {
           )}
         </>
       )}
+
+          {/* Announcements */}
+          {tab === 'announcements' && (
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Post Announcement</h3>
+                <textarea value={newAnnouncement} onChange={e => setNewAnnouncement(e.target.value)}
+                  placeholder="Write your announcement..." rows={3}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-white mb-3 focus:outline-none resize-none" />
+                <div className="flex gap-2">
+                  {['info','warning','success'].map(t => (
+                    <button key={t} onClick={() => setAnnType(t)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium capitalize transition ${annType === t ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                      {t}
+                    </button>
+                  ))}
+                  <motion.button whileTap={{ scale: 0.97 }} disabled={!newAnnouncement.trim()}
+                    onClick={async () => {
+                      const res = await api.post('/admin/announcements', { message: newAnnouncement, type: annType })
+                      setAnnouncements(prev => [res.data.announcement, ...prev])
+                      setNewAnnouncement('')
+                      toast.success('Announcement posted')
+                    }}
+                    className="ml-auto px-4 py-1.5 bg-blue-600 text-white text-xs rounded-xl disabled:opacity-50">
+                    Post
+                  </motion.button>
+                </div>
+              </div>
+              {announcements.map(a => (
+                <div key={a._id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${a.type === 'warning' ? 'bg-amber-100 text-amber-600' : a.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>{a.type}</span>
+                  <p className="flex-1 text-sm text-gray-700 dark:text-gray-300">{a.message}</p>
+                  <button onClick={async () => {
+                    await api.delete(`/admin/announcements/${a._id}`)
+                    setAnnouncements(prev => prev.filter(x => x._id !== a._id))
+                    toast.success('Removed')
+                  }} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
       {/* Flag Modal */}
       <AnimatePresence>
