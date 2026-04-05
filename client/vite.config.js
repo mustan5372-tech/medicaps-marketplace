@@ -3,5 +3,23 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // No proxy - frontend calls Railway directly
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Animation
+          'vendor-motion': ['framer-motion'],
+          // UI utilities
+          'vendor-ui': ['react-hot-toast', 'react-icons', 'date-fns'],
+          // State
+          'vendor-state': ['zustand'],
+          // Socket + API
+          'vendor-network': ['axios', 'socket.io-client'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600,
+  }
 })

@@ -1,57 +1,68 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AnimatePresence } from 'framer-motion'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useThemeStore } from './store/themeStore'
 import { trackPageView } from './utils/analytics'
 
 import Navbar from './components/Navbar'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ListingDetail from './pages/ListingDetail'
-import CreateListing from './pages/CreateListing'
-import EditListing from './pages/EditListing'
-import Profile from './pages/Profile'
-import Chat from './pages/Chat'
-import AdminDashboard from './pages/AdminDashboard'
-import SavedListings from './pages/SavedListings'
-import Leaderboard from './pages/Leaderboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import VerifyEmail from './pages/VerifyEmail'
-
 import FloatingPostButton from './components/FloatingPostButton'
+
+// Lazy load all pages — splits into separate chunks
+const Home           = lazy(() => import('./pages/Home'))
+const Login          = lazy(() => import('./pages/Login'))
+const Register       = lazy(() => import('./pages/Register'))
+const ListingDetail  = lazy(() => import('./pages/ListingDetail'))
+const CreateListing  = lazy(() => import('./pages/CreateListing'))
+const EditListing    = lazy(() => import('./pages/EditListing'))
+const Profile        = lazy(() => import('./pages/Profile'))
+const Chat           = lazy(() => import('./pages/Chat'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const SavedListings  = lazy(() => import('./pages/SavedListings'))
+const Leaderboard    = lazy(() => import('./pages/Leaderboard'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword  = lazy(() => import('./pages/ResetPassword'))
+const VerifyEmail    = lazy(() => import('./pages/VerifyEmail'))
+
+function PageLoader() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
 
 function AnimatedRoutes() {
   const location = useLocation()
   useEffect(() => { trackPageView(location.pathname) }, [location])
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/verify-email/:token" element={<VerifyEmail />} />
-        <Route path="/listing/:id" element={<ListingDetail />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/create-listing" element={<CreateListing />} />
-          <Route path="/edit-listing/:id" element={<EditListing />} />
-          <Route path="/profile/:id" element={<Profile />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/chat/:userId" element={<Chat />} />
-          <Route path="/saved" element={<SavedListings />} />
-        </Route>
-        <Route element={<AdminRoute />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/listing/:id" element={<ListingDetail />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/create-listing" element={<CreateListing />} />
+            <Route path="/edit-listing/:id" element={<EditListing />} />
+            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:userId" element={<Chat />} />
+            <Route path="/saved" element={<SavedListings />} />
+          </Route>
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </AnimatePresence>
   )
 }
