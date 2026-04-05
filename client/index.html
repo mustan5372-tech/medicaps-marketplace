@@ -9,6 +9,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#030712" />
     <title>MediCaps Marketplace</title>
+    <!-- Apply glass theme before React mounts to prevent flicker -->
+    <script>
+      try {
+        const saved = JSON.parse(localStorage.getItem('theme') || '{}')
+        const glass = saved.state?.glass !== false  // default true if not explicitly set to false
+        if (glass) document.documentElement.setAttribute('data-glass', 'true')
+        if (saved.state?.dark) document.documentElement.classList.add('dark')
+      } catch(e) {
+        document.documentElement.setAttribute('data-glass', 'true')
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <!-- Google tag (gtag.js) -->

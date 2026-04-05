@@ -5,7 +5,7 @@ export const useThemeStore = create(
   persist(
     (set, get) => ({
       dark: false,
-      glass: false,
+      glass: true,  // glass theme on by default for first-time visitors
       toggle: () => set({ dark: !get().dark }),
       toggleGlass: () => set({ glass: !get().glass }),
     }),
