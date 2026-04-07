@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../utils/api'
 import toast from 'react-hot-toast'
@@ -7,7 +8,8 @@ import AdminEbooks from '../components/AdminEbooks'
 import { FiTrash2, FiUserX, FiFlag, FiUsers, FiList, FiAlertTriangle, FiCheckCircle, FiEye, FiShield, FiEdit2, FiZap, FiBook } from 'react-icons/fi'
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('listings')
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState(searchParams.get('tab') || 'listings')
   const [listings, setListings] = useState([])
   const [users, setUsers] = useState([])
   const [reports, setReports] = useState([])

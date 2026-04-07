@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiBell, FiCheck, FiMessageSquare } from 'react-icons/fi'
+import { FiBell, FiCheck, FiMessageSquare, FiBook } from 'react-icons/fi'
 import { useNotificationStore } from '../store/notificationStore'
 import { useAuthStore } from '../store/authStore'
 import { getSocket } from '../utils/socket'
 import { formatDistanceToNow } from 'date-fns'
+import toast from 'react-hot-toast'
 
 export default function NotificationBell() {
   const { user } = useAuthStore()
@@ -18,16 +19,44 @@ export default function NotificationBell() {
     if (!user) return
     fetchNotifications()
 
-    // Listen for real-time notifications
     const socket = getSocket()
     if (socket) {
       socket.on('new_notification', (notif) => {
         addNotification(notif)
-        // Browser notification if tab not focused
+
+        // Rich toast for ebook requests (admin only)
+        if (notif.type === 'ebookRequest') {
+          toast.custom((t) => (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className={`flex items-start gap-3 bg-gray-900 border border-purple-500/30 rounded-2xl px-4 py-3 shadow-2xl shadow-purple-500/20 max-w-sm cursor-pointer ${t.visible ? '' : 'opacity-0'}`}
+              onClick={() => {
+                toast.dismiss(t.id)
+                navigate('/admin?tab=ebooks')
+              }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shrink-0">
+                <FiBook className="text-purple-400" size={18} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold text-sm">📚 New Ebook Request</p>
+                <p className="text-white/60 text-xs mt-0.5 truncate">{notif.message?.replace('📚 New ebook request: ', '')}</p>
+                <p className="text-purple-400 text-xs mt-1 font-medium">Tap to fulfill →</p>
+              </div>
+            </motion.div>
+          ), { duration: 8000, position: 'top-right' })
+        }
+
+        // Browser push notification
         if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
-          new Notification(`New message from ${notif.senderId?.name || 'Someone'}`, {
+          const isEbook = notif.type === 'ebookRequest'
+          new Notification(isEbook ? '📚 New Ebook Request' : `New message from ${notif.senderId?.name || 'Someone'}`, {
             body: notif.message,
             icon: '/logo.png',
+            badge: '/logo.png',
+            tag: isEbook ? 'ebook-request' : 'message',
           })
         }
       })
@@ -37,7 +66,6 @@ export default function NotificationBell() {
   }, [user])
 
   useEffect(() => {
-    // Request browser notification permission
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
@@ -52,7 +80,9 @@ export default function NotificationBell() {
   const handleClick = async (notif) => {
     await markRead(notif._id)
     setOpen(false)
-    if (notif.conversationId) {
+    if (notif.type === 'ebookRequest') {
+      navigate('/admin?tab=ebooks')
+    } else if (notif.conversationId) {
       navigate(`/chat?conv=${notif.conversationId}`)
     }
   }
@@ -67,9 +97,11 @@ export default function NotificationBell() {
         onClick={() => setOpen(!open)}
         className="relative p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"
       >
-        <motion.div animate={unreadCount > 0 ? { scale: [1, 1.2, 1], opacity: [1, 0.8, 1] } : {}}
-          transition={unreadCount > 0 ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : {}}>
-          <FiBell className="w-5 h-5 focus:outline-none" />
+        <motion.div
+          animate={unreadCount > 0 ? { scale: [1, 1.2, 1], opacity: [1, 0.8, 1] } : {}}
+          transition={unreadCount > 0 ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : {}}
+        >
+          <FiBell className="w-5 h-5" />
         </motion.div>
         <AnimatePresence>
           {unreadCount > 0 && (
@@ -113,36 +145,52 @@ export default function NotificationBell() {
                   <p className="text-sm">No notifications yet</p>
                 </div>
               ) : (
-                notifications.map(notif => (
-                  <motion.button
-                    key={notif._id}
-                    whileHover={{ backgroundColor: 'rgba(59,130,246,0.05)' }}
-                    onClick={() => handleClick(notif)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b border-gray-50 dark:border-gray-800 transition ${!notif.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
-                  >
-                    {/* Avatar */}
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
-                      {notif.senderId?.avatar
-                        ? <img src={notif.senderId.avatar} alt="" className="w-full h-full object-cover" />
-                        : notif.senderId?.name?.[0]?.toUpperCase()
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900 dark:text-white font-medium truncate">
-                        {notif.senderId?.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
-                        <FiMessageSquare className="w-3 h-3" /> {notif.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
-                      </p>
-                    </div>
-                    {!notif.isRead && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1.5" />
-                    )}
-                  </motion.button>
-                ))
+                notifications.map(notif => {
+                  const isEbook = notif.type === 'ebookRequest'
+                  return (
+                    <motion.button
+                      key={notif._id}
+                      whileHover={{ backgroundColor: isEbook ? 'rgba(168,85,247,0.05)' : 'rgba(59,130,246,0.05)' }}
+                      onClick={() => handleClick(notif)}
+                      className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b border-gray-50 dark:border-gray-800 transition ${!notif.isRead ? (isEbook ? 'bg-purple-50/50 dark:bg-purple-900/10' : 'bg-blue-50/50 dark:bg-blue-900/10') : ''}`}
+                    >
+                      {/* Icon / Avatar */}
+                      {isEbook ? (
+                        <div className="w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
+                          <FiBook className="text-purple-400 w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+                          {notif.senderId?.avatar
+                            ? <img src={notif.senderId.avatar} alt="" className="w-full h-full object-cover" />
+                            : notif.senderId?.name?.[0]?.toUpperCase()
+                          }
+                        </div>
+                      )}
+
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 dark:text-white font-medium truncate">
+                          {isEbook ? '📚 Ebook Request' : notif.senderId?.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+                          {isEbook
+                            ? <><FiBook className="w-3 h-3 text-purple-400" /> {notif.message?.replace('📚 New ebook request: ', '')}</>
+                            : <><FiMessageSquare className="w-3 h-3" /> {notif.message}</>
+                          }
+                        </p>
+                        {isEbook && (
+                          <p className="text-xs text-purple-400 font-medium mt-0.5">Tap to fulfill →</p>
+                        )}
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                      {!notif.isRead && (
+                        <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${isEbook ? 'bg-purple-500' : 'bg-blue-500'}`} />
+                      )}
+                    </motion.button>
+                  )
+                })
               )}
             </div>
           </motion.div>

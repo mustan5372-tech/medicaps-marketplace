@@ -40,6 +40,7 @@ const io = new Server(server, {
   pingInterval: 25000,
 })
 initSocket(io)
+app.set('io', io) // make io accessible in routes
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }))
