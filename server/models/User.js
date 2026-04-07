@@ -20,9 +20,11 @@ const userSchema = new mongoose.Schema({
   resetToken: String,
   resetTokenExpiry: Date,
   freeBoostUsed: { type: Number, default: 0 },
+  unlimitedBoost: { type: Boolean, default: false },
   referralCode: { type: String, unique: true, sparse: true },
   referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   referralCount: { type: Number, default: 0 },
+  ebookRequestCount: { type: Number, default: 0 },
 }, { timestamps: true })
 
 userSchema.index({ email: 1 })

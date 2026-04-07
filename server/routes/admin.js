@@ -162,4 +162,43 @@ router.patch('/users/:id/verify-seller', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 
+// Boost listing (admin - unlimited)
+router.patch('/listings/:id/boost', async (req, res) => {
+  try {
+    const { duration = 30 } = req.body // duration in days, default 30
+    const boostExpiresAt = new Date(Date.now() + duration * 24 * 60 * 60 * 1000)
+    const listing = await Listing.findByIdAndUpdate(
+      req.params.id,
+      { isBoosted: true, boostExpiresAt },
+      { new: true }
+    ).populate('seller', 'name email')
+    res.json({ listing, message: `Listing boosted for ${duration} days` })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+// Remove boost from listing
+router.patch('/listings/:id/remove-boost', async (req, res) => {
+  try {
+    const listing = await Listing.findByIdAndUpdate(
+      req.params.id,
+      { isBoosted: false, boostExpiresAt: null },
+      { new: true }
+    ).populate('seller', 'name email')
+    res.json({ listing, message: 'Boost removed' })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+// Toggle unlimited boost for user
+router.patch('/users/:id/unlimited-boost', async (req, res) => {
+  try {
+    const { enabled } = req.body
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { unlimitedBoost: enabled },
+      { new: true }
+    ).select('-password')
+    res.json({ user, message: `Unlimited boost ${enabled ? 'enabled' : 'disabled'}` })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
 module.exports = router

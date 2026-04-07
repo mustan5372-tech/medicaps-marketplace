@@ -164,20 +164,24 @@ router.patch('/:id/tags', protect, async (req, res) => {
   }
 })
 
-// Boost listing (free, max 5 per user)
+// Boost listing (free, max 5 per user, unlimited for special users)
 router.post('/:id/boost', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-    if (user.freeBoostUsed >= 5) return res.status(403).json({ message: 'Free boost limit reached' })
+    if (!user.unlimitedBoost && user.freeBoostUsed >= 5) {
+      return res.status(403).json({ message: 'Free boost limit reached' })
+    }
     const listing = await Listing.findById(req.params.id)
     if (!listing) return res.status(404).json({ message: 'Listing not found' })
     if (listing.seller.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' })
     listing.isBoosted = true
-    listing.boostExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    listing.boostExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
     await listing.save()
-    user.freeBoostUsed += 1
-    await user.save()
-    res.json({ message: 'Listing boosted!', freeBoostUsed: user.freeBoostUsed, boostExpiresAt: listing.boostExpiresAt })
+    if (!user.unlimitedBoost) {
+      user.freeBoostUsed += 1
+      await user.save()
+    }
+    res.json({ message: 'Listing boosted for 30 days!', freeBoostUsed: user.freeBoostUsed, boostExpiresAt: listing.boostExpiresAt })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
