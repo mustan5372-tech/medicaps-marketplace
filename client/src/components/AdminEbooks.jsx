@@ -1,40 +1,27 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiBook, FiUpload, FiEye, FiClock, FiCheckCircle, FiX, FiUsers, FiList, FiAlertCircle } from 'react-icons/fi'
+import { FiBook, FiLink, FiEye, FiClock, FiCheckCircle, FiX, FiUsers, FiList } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
 import api from '../utils/api'
 
-// ── Upload Modal ─────────────────────────────────────────────────────────────
-function UploadModal({ request, onClose, onDone }) {
-  const [file, setFile] = useState(null)
-  const [uploading, setUploading] = useState(false)
-  const inputRef = useRef()
+// ── Fulfill Modal (paste PDF link) ───────────────────────────────────────────
+function FulfillModal({ request, onClose, onDone }) {
+  const [url, setUrl] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleFile = (e) => {
-    const f = e.target.files[0]
-    if (!f) return
-    if (f.type !== 'application/pdf') return toast.error('Only PDF files allowed')
-    if (f.size > 20 * 1024 * 1024) return toast.error('File too large (max 20MB)')
-    setFile(f)
-  }
-
-  const handleUpload = async () => {
-    if (!file) return toast.error('Select a PDF first')
-    setUploading(true)
+  const handleSubmit = async () => {
+    if (!url.trim()) return toast.error('Paste a PDF link first')
+    setLoading(true)
     try {
-      const fd = new FormData()
-      fd.append('pdf', file)
-      const res = await api.post(`/admin/ebooks/${request._id}/upload`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      toast.success('Ebook uploaded & fulfilled ✅')
+      const res = await api.patch(`/admin/ebooks/${request._id}/fulfill`, { ebookUrl: url.trim() })
+      toast.success('Ebook fulfilled ✅')
       onDone(res.data.request)
       onClose()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Upload failed')
+      toast.error(err.response?.data?.message || 'Failed to fulfill')
     }
-    setUploading(false)
+    setLoading(false)
   }
 
   return (
@@ -47,42 +34,37 @@ function UploadModal({ request, onClose, onDone }) {
       >
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-semibold flex items-center gap-2">
-            <FiUpload className="text-blue-400" /> Upload PDF
+            <FiLink className="text-blue-400" /> Fulfill Request
           </h3>
           <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
             <FiX size={20} />
           </button>
         </div>
 
+        {/* Request info */}
         <div className="bg-white/5 rounded-xl p-3 mb-4">
           <p className="text-white font-medium text-sm">{request.bookName}</p>
-          <p className="text-white/40 text-xs mt-0.5">{request.subject}{request.author ? ` · ${request.author}` : ''}</p>
+          <p className="text-white/40 text-xs mt-0.5">
+            {request.subject}{request.author ? ` · ${request.author}` : ''}
+          </p>
           <p className="text-white/30 text-xs mt-1">Requested by {request.requestedBy?.name}</p>
         </div>
 
-        <div
-          onClick={() => inputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-            file ? 'border-green-500/40 bg-green-500/5' : 'border-white/10 hover:border-blue-500/40 hover:bg-blue-500/5'
-          }`}
-        >
-          <input ref={inputRef} type="file" accept="application/pdf" onChange={handleFile} className="hidden" />
-          {file ? (
-            <>
-              <FiCheckCircle className="text-green-400 mx-auto mb-2" size={28} />
-              <p className="text-green-400 text-sm font-medium">{file.name}</p>
-              <p className="text-white/30 text-xs mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-            </>
-          ) : (
-            <>
-              <FiUpload className="text-white/30 mx-auto mb-2" size={28} />
-              <p className="text-white/50 text-sm">Click to select PDF</p>
-              <p className="text-white/30 text-xs mt-1">Max 20MB</p>
-            </>
-          )}
-        </div>
+        {/* URL input */}
+        <label className="block text-sm text-white/60 mb-2">
+          Paste PDF link <span className="text-white/30">(Google Drive, Telegram, any direct link)</span>
+        </label>
+        <input
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="https://drive.google.com/..."
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500/50 transition-colors text-sm mb-1"
+        />
+        <p className="text-white/20 text-xs mb-4">
+          Tip: For Google Drive, set sharing to "Anyone with the link can view"
+        </p>
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3">
           <button
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/60 hover:text-white transition-all"
@@ -90,11 +72,11 @@ function UploadModal({ request, onClose, onDone }) {
             Cancel
           </button>
           <button
-            onClick={handleUpload}
-            disabled={!file || uploading}
+            onClick={handleSubmit}
+            disabled={!url.trim() || loading}
             className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all disabled:opacity-50"
           >
-            {uploading ? 'Uploading...' : 'Upload & Fulfill'}
+            {loading ? 'Saving...' : 'Fulfill Request'}
           </button>
         </div>
       </motion.div>
@@ -108,7 +90,7 @@ export default function AdminEbooks() {
   const [stats, setStats] = useState({ total: 0, pending: 0, fulfilled: 0 })
   const [filter, setFilter] = useState('pending')
   const [loading, setLoading] = useState(true)
-  const [uploadTarget, setUploadTarget] = useState(null)
+  const [fulfillTarget, setFulfillTarget] = useState(null)
 
   const load = async () => {
     setLoading(true)
@@ -124,7 +106,7 @@ export default function AdminEbooks() {
 
   const handleDone = (updated) => {
     setRequests(prev => prev.map(r => r._id === updated._id ? updated : r))
-    setStats(prev => ({ ...prev, pending: prev.pending - 1, fulfilled: prev.fulfilled + 1 }))
+    setStats(prev => ({ ...prev, pending: Math.max(0, prev.pending - 1), fulfilled: prev.fulfilled + 1 }))
   }
 
   const statCards = [
@@ -206,10 +188,10 @@ export default function AdminEbooks() {
                 </span>
                 {req.status === 'pending' ? (
                   <button
-                    onClick={() => setUploadTarget(req)}
+                    onClick={() => setFulfillTarget(req)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-sm transition-all"
                   >
-                    <FiUpload size={13} /> Upload PDF
+                    <FiLink size={13} /> Fulfill
                   </button>
                 ) : (
                   <a
@@ -228,10 +210,10 @@ export default function AdminEbooks() {
       )}
 
       <AnimatePresence>
-        {uploadTarget && (
-          <UploadModal
-            request={uploadTarget}
-            onClose={() => setUploadTarget(null)}
+        {fulfillTarget && (
+          <FulfillModal
+            request={fulfillTarget}
+            onClose={() => setFulfillTarget(null)}
             onDone={handleDone}
           />
         )}
