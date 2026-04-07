@@ -27,6 +27,7 @@ const Leaderboard    = lazy(() => import('./pages/Leaderboard'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword  = lazy(() => import('./pages/ResetPassword'))
 const VerifyEmail    = lazy(() => import('./pages/VerifyEmail'))
+const Ebooks         = lazy(() => import('./pages/Ebooks'))
 
 function PageLoader() {
   return (
@@ -38,7 +39,10 @@ function PageLoader() {
 
 function AnimatedRoutes() {
   const location = useLocation()
-  useEffect(() => { trackPageView(location.pathname) }, [location])
+  useEffect(() => { 
+    trackPageView(location.pathname)
+    window.scrollTo(0, 0)
+  }, [location])
   return (
     <AnimatePresence mode="wait" initial={false}>
       <Suspense fallback={<PageLoader />}>
@@ -58,6 +62,7 @@ function AnimatedRoutes() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/chat/:userId" element={<Chat />} />
             <Route path="/saved" element={<SavedListings />} />
+            <Route path="/ebooks" element={<Ebooks />} />
           </Route>
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminDashboard />} />

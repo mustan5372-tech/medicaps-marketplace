@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../store/authStore'
 import { useThemeStore } from '../store/themeStore'
 import { useListingStore } from '../store/listingStore'
-import { FiSearch, FiSun, FiMoon, FiPlus, FiMessageSquare, FiHeart, FiUser, FiLogOut, FiShield, FiMenu, FiX, FiAward } from 'react-icons/fi'
+import { FiSearch, FiSun, FiMoon, FiPlus, FiMessageSquare, FiHeart, FiUser, FiLogOut, FiShield, FiMenu, FiX, FiAward, FiBook } from 'react-icons/fi'
 import { RiMagicLine } from 'react-icons/ri'
 import SearchBar from './SearchBar'
 import NotificationBell from './NotificationBell'
@@ -76,6 +76,7 @@ export default function Navbar() {
               </Link>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Link to="/chat" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition block"><FiMessageSquare className="w-5 h-5" /></Link></motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Link to="/leaderboard" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition block" title="Leaderboard"><FiAward className="w-5 h-5" /></Link></motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Link to="/ebooks" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition block" title="Ebooks"><FiBook className="w-5 h-5" /></Link></motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Link to="/saved" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition block"><FiHeart className="w-5 h-5" /></Link></motion.div>
               <NotificationBell />
               <div className="relative" ref={profileRef}>
@@ -125,6 +126,7 @@ export default function Navbar() {
                   <Link to="/create-listing" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"><FiPlus className="w-4 h-4" /> Sell something</Link>
                   <Link to="/chat" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiMessageSquare className="w-4 h-4" /> Messages</Link>
                   <Link to="/saved" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiHeart className="w-4 h-4" /> Saved</Link>
+                  <Link to="/ebooks" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiBook className="w-4 h-4" /> Ebooks</Link>
                   <Link to={`/profile/${user._id}`} onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><FiUser className="w-4 h-4" /> Profile</Link>
                   {user.role === 'admin' && (
                     <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition font-medium"><FiShield className="w-4 h-4" /> Admin Panel</Link>
