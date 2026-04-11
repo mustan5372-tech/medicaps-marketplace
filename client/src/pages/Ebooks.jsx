@@ -1,74 +1,123 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiBook, FiPlus, FiClock, FiCheckCircle, FiDownload, FiEye, FiX, FiAlertCircle } from 'react-icons/fi'
+import { FiBook, FiEye, FiSearch, FiX, FiMessageSquare } from 'react-icons/fi'
 import toast from 'react-hot-toast'
-import { formatDistanceToNow } from 'date-fns'
 import api from '../utils/api'
 import { useAuthStore } from '../store/authStore'
 import AnimatedPage from '../components/AnimatedPage'
+import SecurePdfViewer from '../components/SecurePdfViewer'
 
-const FREE_LIMIT = 3
+const BRANCHES = ['All', 'First Year', 'Computer Science', 'Mechanical', 'Electrical', 'Electronics', 'Automobile', 'Robotics', 'Civil']
 
-// ── Request Form Modal ──────────────────────────────────────────────────────
-function RequestModal({ onClose, onSubmit, loading }) {
-  const [form, setForm] = useState({ bookName: '', subject: '', author: '' })
+const BRANCH_COLORS = {
+  'Computer Science': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  'Mechanical':       'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  'Electrical':       'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
+  'Electronics':      'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  'Automobile':       'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  'Robotics':         'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+  'Civil':            'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  'First Year':       'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+}
+
+function isNew(date) {
+  return Date.now() - new Date(date).getTime() < 7 * 24 * 60 * 60 * 1000
+}
+
+function EbookCard({ ebook, onView }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -3 }}
+      className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md flex flex-col"
+    >
+      {/* Cover */}
+      <div className="relative h-32 bg-gradient-to-br from-indigo-500 via-blue-500 to-purple-600 flex items-center justify-center shrink-0">
+        {ebook.coverUrl
+          ? <img src={ebook.coverUrl} alt={ebook.title} className="w-full h-full object-cover" />
+          : <FiBook className="text-white/50" size={36} />
+        }
+        <div className="absolute top-2 left-2 flex gap-1">
+          {ebook.isImportant && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">🔥 Popular</span>
+          )}
+          {isNew(ebook.createdAt) && (
+            <span className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">New</span>
+          )}
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-3 flex flex-col flex-1">
+        <p className="font-semibold text-gray-900 dark:text-white text-sm leading-snug line-clamp-2 mb-1">{ebook.title}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{ebook.subject}</p>
+        <div className="flex items-center justify-between mb-3 mt-auto">
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${BRANCH_COLORS[ebook.branch] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}>
+            {ebook.branch}
+          </span>
+          <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+            <FiEye size={9} /> {ebook.views || 0}
+          </span>
+        </div>
+        <button
+          onClick={() => onView(ebook)}
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors"
+        >
+          <FiEye size={12} /> View Ebook
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+function Section({ title, ebooks, onView }) {
+  if (!ebooks.length) return null
+  return (
+    <div className="mb-10">
+      <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-3">{title}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <AnimatePresence mode="popLayout">
+          {ebooks.map(e => <EbookCard key={e._id} ebook={e} onView={onView} />)}
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
+
+function RequestModal({ onClose }) {
+  const [form, setForm] = useState({ bookName: '', subject: '' })
+  const [loading, setLoading] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.bookName.trim() || !form.subject.trim()) return toast.error('Book name and subject are required')
-    onSubmit(form)
+    if (!form.bookName.trim() || !form.subject.trim()) return toast.error('Fill all fields')
+    setLoading(true)
+    try {
+      await api.post('/ebooks/request', form)
+      toast.success('Request submitted!')
+      onClose()
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed') }
+    setLoading(false)
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl"
-      >
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <FiBook className="text-blue-400" /> Request an Ebook
-          </h2>
-          <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
-            <FiX size={20} />
-          </button>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-900 dark:text-white">Request a Missing Book</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white"><FiX size={18} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Book Name *</label>
-            <input
-              value={form.bookName}
-              onChange={e => set('bookName', e.target.value)}
-              placeholder="e.g. Anatomy of Gray"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Subject *</label>
-            <input
-              value={form.subject}
-              onChange={e => set('subject', e.target.value)}
-              placeholder="e.g. Anatomy, Pharmacology"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Author <span className="text-white/30">(optional)</span></label>
-            <input
-              value={form.author}
-              onChange={e => set('author', e.target.value)}
-              placeholder="e.g. Henry Gray"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input value={form.bookName} onChange={e => set('bookName', e.target.value)} placeholder="Book name *"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500" />
+          <input value={form.subject} onChange={e => set('subject', e.target.value)} placeholder="Subject *"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500" />
+          <button type="submit" disabled={loading}
+            className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition disabled:opacity-50">
             {loading ? 'Submitting...' : 'Submit Request'}
           </button>
         </form>
@@ -77,311 +126,125 @@ function RequestModal({ onClose, onSubmit, loading }) {
   )
 }
 
-// ── Payment Confirmation Modal ──────────────────────────────────────────────
-function PaymentModal({ form, onConfirm, onCancel, loading }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl text-center"
-      >
-        <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
-          <FiBook className="text-blue-400" size={24} />
-        </div>
-        <h2 className="text-lg font-semibold text-white mb-1">Confirm Request</h2>
-        <p className="text-white/50 text-sm mb-4">You're about to request:</p>
-        <div className="bg-white/5 rounded-xl p-3 mb-5 text-left">
-          <p className="text-white font-medium">{form.bookName}</p>
-          <p className="text-white/50 text-sm">{form.subject}{form.author ? ` · ${form.author}` : ''}</p>
-        </div>
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="text-white/50 text-sm">Payment:</span>
-          <span className="text-2xl font-bold text-green-400">₹2</span>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-medium transition-all disabled:opacity-50"
-          >
-            {loading ? 'Processing...' : 'Confirm & Pay'}
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
-
-// ── Request Card ────────────────────────────────────────────────────────────
-function RequestCard({ req, isOwn }) {
-  const isFulfilled = req.status === 'fulfilled'
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-white truncate">{req.bookName}</p>
-          <p className="text-sm text-white/50 mt-0.5">{req.subject}{req.author ? ` · ${req.author}` : ''}</p>
-          {req.requestedBy?.name && (
-            <p className="text-xs text-white/30 mt-1">by {req.requestedBy.name}</p>
-          )}
-          <p className="text-xs text-white/30 mt-1 flex items-center gap-1">
-            <FiClock size={11} />
-            {formatDistanceToNow(new Date(req.createdAt), { addSuffix: true })}
-          </p>
-        </div>
-        <span className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${
-          isFulfilled
-            ? 'bg-green-500/20 text-green-400 border border-green-500/20'
-            : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20'
-        }`}>
-          {isFulfilled ? <FiCheckCircle size={11} /> : <FiClock size={11} />}
-          {isFulfilled ? 'Fulfilled' : 'Pending'}
-        </span>
-      </div>
-      {isFulfilled && isOwn && req.ebookUrl && (
-        <div className="flex gap-2 mt-3 pt-3 border-t border-white/5">
-          <a
-            href={req.ebookUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-sm transition-all"
-          >
-            <FiEye size={14} /> View PDF
-          </a>
-          <a
-            href={req.ebookUrl}
-            download
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-sm transition-all"
-          >
-            <FiDownload size={14} /> Download
-          </a>
-        </div>
-      )}
-    </motion.div>
-  )
-}
-
-// ── Main Page ───────────────────────────────────────────────────────────────
 export default function Ebooks() {
-  const { user } = useAuthStore()
-  const [requests, setRequests] = useState([])
-  const [userRequests, setUserRequests] = useState([])
-  const [freeLeft, setFreeLeft] = useState(FREE_LIMIT)
-  const [tab, setTab] = useState('all')
-  const [showForm, setShowForm] = useState(false)
-  const [pendingForm, setPendingForm] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(true)
+  const [ebooks, setEbooks] = useState([])
+  const [branch, setBranch] = useState('All')
+  const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [viewer, setViewer] = useState(null)
+  const [showRequest, setShowRequest] = useState(false)
 
   const load = useCallback(async () => {
-    setFetching(true)
+    setLoading(true)
     try {
-      const [allRes, userRes] = await Promise.all([
-        api.get('/ebooks'),
-        api.get('/ebooks/user'),
-      ])
-      setRequests(allRes.data.requests)
-      setUserRequests(userRes.data.requests)
-      setFreeLeft(userRes.data.freeLeft)
-    } catch {}
-    setFetching(false)
-  }, [])
+      const res = await api.get('/ebooks', { params: branch !== 'All' ? { branch } : {} })
+      setEbooks(res.data.ebooks || [])
+    } catch { toast.error('Failed to load library') }
+    setLoading(false)
+  }, [branch])
 
   useEffect(() => { load() }, [load])
 
-  const handleFormSubmit = async (form) => {
-    if (freeLeft > 0) {
-      // Free request
-      setLoading(true)
-      try {
-        await api.post('/ebooks/request', form)
-        toast.success('Request submitted 🎉')
-        setShowForm(false)
-        load()
-      } catch (err) {
-        toast.error(err.response?.data?.message || 'Failed to submit')
-      }
-      setLoading(false)
-    } else {
-      // Paid — show payment modal
-      setShowForm(false)
-      setPendingForm(form)
-    }
-  }
+  const filtered = search
+    ? ebooks.filter(e =>
+        e.title.toLowerCase().includes(search.toLowerCase()) ||
+        e.subject.toLowerCase().includes(search.toLowerCase())
+      )
+    : ebooks
 
-  const handlePayment = async () => {
-    setLoading(true)
-    try {
-      const orderRes = await api.post('/ebooks/create-order')
-      const { orderId, amount, currency, keyId } = orderRes.data
-
-      const options = {
-        key: keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount,
-        currency,
-        name: 'MediCaps Marketplace',
-        description: `Ebook Request: ${pendingForm.bookName}`,
-        order_id: orderId,
-        handler: async (response) => {
-          try {
-            await api.post('/ebooks/verify-payment', {
-              ...response,
-              ...pendingForm,
-            })
-            toast.success('Request submitted 🎉')
-            setPendingForm(null)
-            load()
-          } catch {
-            toast.error('Payment verification failed ❌')
-          }
-        },
-        prefill: { name: user?.name, email: user?.email },
-        theme: { color: '#3b82f6' },
-        modal: {
-          ondismiss: () => {
-            toast.error('Payment cancelled')
-            setLoading(false)
-          }
-        }
-      }
-
-      const rzp = new window.Razorpay(options)
-      rzp.on('payment.failed', () => {
-        toast.error('Payment failed ❌ Try again')
-        setLoading(false)
-      })
-      rzp.open()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not initiate payment')
-      setLoading(false)
-    }
-    setLoading(false)
-  }
-
-  const displayList = tab === 'mine' ? userRequests : requests
+  const important = filtered.filter(e => e.isImportant)
+  const recent    = filtered.filter(e => isNew(e.createdAt))
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-gray-950 pt-20 pb-16 px-4">
-        <div className="max-w-3xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 py-8">
 
-          {/* Hero */}
-          <div className="text-center mb-10">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 text-blue-400 text-sm mb-4"
-            >
-              <FiBook size={14} /> Ebook Library
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="text-3xl font-bold text-white mb-2"
-            >
-              📚 Find Any Ebook in MediCaps
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-white/50 mb-6"
-            >
-              Request any book and get it quickly
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-3"
-            >
-              <button
-                onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all hover:scale-105 active:scale-95"
-              >
-                <FiPlus size={18} /> Request Ebook
-              </button>
-              <div className={`flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl border ${
-                freeLeft > 0
-                  ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                  : 'bg-orange-500/10 border-orange-500/20 text-orange-400'
-              }`}>
-                {freeLeft > 0
-                  ? <><FiCheckCircle size={14} /> {freeLeft} free request{freeLeft !== 1 ? 's' : ''} left</>
-                  : <><FiAlertCircle size={14} /> Next request costs ₹2</>
-                }
-              </div>
-            </motion.div>
+        {/* Hero */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-full px-4 py-1.5 text-indigo-600 dark:text-indigo-400 text-xs font-semibold mb-3">
+            <FiBook size={12} /> Instant Access Library
           </div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-2">
+            📚 MST Ebook Library
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-5 text-sm">
+            Access important books instantly for your exams
+          </p>
+          <button
+            onClick={() => setShowRequest(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-sm hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          >
+            <FiMessageSquare size={13} /> Request Missing Book
+          </button>
+        </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6">
-            {['all', 'mine'].map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  tab === t
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {t === 'all' ? 'All Requests' : 'My Requests'}
-              </button>
-            ))}
-          </div>
-
-          {/* List */}
-          {fetching ? (
-            <div className="flex justify-center py-16">
-              <div className="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : displayList.length === 0 ? (
-            <div className="text-center py-16 text-white/30">
-              <FiBook size={40} className="mx-auto mb-3 opacity-30" />
-              <p>{tab === 'mine' ? 'No requests yet. Request your first ebook!' : 'No requests yet. Be the first!'}</p>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {displayList.map(req => (
-                <RequestCard key={req._id} req={req} isOwn={tab === 'mine' || req.requestedBy?._id === user?._id} />
-              ))}
-            </div>
+        {/* Search */}
+        <div className="relative max-w-sm mx-auto mb-5">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search title or subject..."
+            className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <FiX size={13} />
+            </button>
           )}
         </div>
+
+        {/* Branch filters */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+          {BRANCHES.map(b => (
+            <button key={b} onClick={() => setBranch(b)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                branch === b
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {b}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="rounded-2xl bg-gray-100 dark:bg-gray-800 h-52 animate-pulse" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <FiBook size={44} className="mx-auto mb-3 opacity-20" />
+            <p className="text-sm">{search ? `No results for "${search}"` : 'No ebooks in this category yet'}</p>
+          </div>
+        ) : (
+          <>
+            <Section title="🔥 Most Important for MST" ebooks={important} onView={setViewer} />
+            <Section title="⚡ Recently Added" ebooks={recent} onView={setViewer} />
+            <Section title="📚 All Books" ebooks={filtered} onView={setViewer} />
+          </>
+        )}
       </div>
 
-      {/* Modals */}
+      {/* Secure PDF viewer */}
       <AnimatePresence>
-        {showForm && (
-          <RequestModal
-            onClose={() => setShowForm(false)}
-            onSubmit={handleFormSubmit}
-            loading={loading}
+        {viewer && (
+          <SecurePdfViewer
+            key={viewer._id}
+            ebookId={viewer._id}
+            title={viewer.title}
+            onClose={() => setViewer(null)}
           />
         )}
-        {pendingForm && (
-          <PaymentModal
-            form={pendingForm}
-            onConfirm={handlePayment}
-            onCancel={() => setPendingForm(null)}
-            loading={loading}
-          />
-        )}
+      </AnimatePresence>
+
+      {/* Request modal */}
+      <AnimatePresence>
+        {showRequest && <RequestModal onClose={() => setShowRequest(false)} />}
       </AnimatePresence>
     </AnimatedPage>
   )
