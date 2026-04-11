@@ -29,6 +29,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword  = lazy(() => import('./pages/ResetPassword'))
 const VerifyEmail    = lazy(() => import('./pages/VerifyEmail'))
 const Ebooks         = lazy(() => import('./pages/Ebooks'))
+const EbookReader    = lazy(() => import('./pages/EbookReader'))
 
 function PageLoader() {
   return (
@@ -64,6 +65,7 @@ function AnimatedRoutes() {
             <Route path="/chat/:userId" element={<Chat />} />
             <Route path="/saved" element={<SavedListings />} />
             <Route path="/ebooks" element={<Ebooks />} />
+            <Route path="/reader/:id" element={<EbookReader />} />
           </Route>
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminDashboard />} />
