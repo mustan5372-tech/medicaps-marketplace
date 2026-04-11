@@ -13,10 +13,7 @@ export default function EbookReader() {
   const [numPages, setNumPages] = useState(null)
   const [page, setPage] = useState(1)
   const ref = useRef(null)
-
-  // Pass user JWT directly as query param — no extra API call needed
   const token = localStorage.getItem("token") || ""
-  const pdfUrl = BASE + "/ebooks/" + id + "/view?token=" + encodeURIComponent(token)
 
   useEffect(() => {
     const block = e => {
@@ -27,8 +24,7 @@ export default function EbookReader() {
   }, [])
 
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
+    const el = ref.current; if (!el) return
     const block = e => e.preventDefault()
     el.addEventListener("contextmenu", block)
     return () => el.removeEventListener("contextmenu", block)
@@ -40,18 +36,16 @@ export default function EbookReader() {
         <button onClick={() => navigate(-1)} className="text-white/60 hover:text-white text-sm">← Back</button>
         <span className="text-white/40 text-sm">Page {page} / {numPages || "—"}</span>
         <div className="ml-auto flex gap-2">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-            className="px-3 py-1 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30">Prev</button>
-          <button onClick={() => setPage(p => Math.min(numPages || 1, p + 1))} disabled={page >= (numPages || 1)}
-            className="px-3 py-1 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30">Next</button>
+          <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page<=1} className="px-3 py-1 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30">Prev</button>
+          <button onClick={() => setPage(p => Math.min(numPages||1, p+1))} disabled={page>=(numPages||1)} className="px-3 py-1 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30">Next</button>
         </div>
       </div>
       <div ref={ref} className="flex-1 overflow-auto flex justify-center py-6" style={{ userSelect: "none" }}>
         <Document
-          file={pdfUrl}
+          file={{ url: BASE + "/ebooks/" + id + "/view", httpHeaders: { Authorization: "Bearer " + token } }}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           loading={<p className="text-white/40 mt-20">Loading PDF...</p>}
-          error={<p className="text-red-400 mt-20 text-center">Failed to load PDF. Please re-upload this ebook from admin panel.</p>}
+          error={<p className="text-red-400 mt-20 text-center px-4">Failed to load. Try re-uploading from admin panel.</p>}
         >
           <Page pageNumber={page} renderTextLayer={false} renderAnnotationLayer={false} />
         </Document>
