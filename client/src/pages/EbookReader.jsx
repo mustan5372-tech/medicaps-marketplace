@@ -4,7 +4,7 @@ import { Document, Page, pdfjs } from "react-pdf"
 import "react-pdf/dist/Page/AnnotationLayer.css"
 import "react-pdf/dist/Page/TextLayer.css"
 
-pdfjs.GlobalWorkerOptions.workerSrc = "//unpkg.com/pdfjs-dist@" + pdfjs.version + "/build/pdf.worker.min.js"
+pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/" + pdfjs.version + "/pdf.worker.min.js"
 const BASE = import.meta.env.VITE_API_URL || "https://medicaps-backend-7cwm.onrender.com/api"
 
 export default function EbookReader() {
@@ -14,7 +14,6 @@ export default function EbookReader() {
   const [page, setPage] = useState(1)
   const ref = useRef(null)
   const token = localStorage.getItem("token") || ""
-  const pdfUrl = BASE + "/ebooks/" + id + "/view?token=" + token
 
   useEffect(() => {
     const block = e => {
@@ -46,10 +45,10 @@ export default function EbookReader() {
       </div>
       <div ref={ref} className="flex-1 overflow-auto flex justify-center py-6" style={{ userSelect: "none" }}>
         <Document
-          file={pdfUrl}
+          file={{ url: BASE + "/ebooks/" + id + "/view", httpHeaders: { Authorization: "Bearer " + token } }}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           loading={<p className="text-white/40 mt-20">Loading PDF...</p>}
-          error={<p className="text-red-400 mt-20 text-center px-4">Failed to load PDF.<br/>Make sure backend is running and you are logged in.</p>}
+          error={<p className="text-red-400 mt-20 text-center px-4">Failed to load PDF.</p>}
         >
           <Page pageNumber={page} renderTextLayer={false} renderAnnotationLayer={false} />
         </Document>

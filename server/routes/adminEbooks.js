@@ -1,36 +1,46 @@
-const router = require('express').Router()
-const path   = require('path')
-const fs     = require('fs')
-const Ebook  = require('../models/Ebook')
+const router  = require('express').Router()
+const multer  = require('multer')
+const Ebook   = require('../models/Ebook')
 const { protect, adminOnly } = require('../middleware/auth')
-
-const DIR = path.resolve(__dirname, '..', 'storage', 'ebooks')
-if (!fs.existsSync(DIR)) fs.mkdirSync(DIR, { recursive: true })
+const { uploadPdf } = require('../middleware/upload')
 
 router.use(protect, adminOnly)
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_, file, cb) =>
+    file.mimetype === 'application/pdf' ? cb(null, true) : cb(new Error('PDF only')),
+})
 
 router.get('/', async (req, res) => {
   const ebooks = await Ebook.find().sort({ createdAt: -1 })
   res.json({ ebooks })
 })
 
-router.post('/upload', async (req, res) => {
+router.post('/upload', upload.single('file'), async (req, res) => {
   try {
-    const file = req.files?.file
-    if (!file || file.mimetype !== 'application/pdf')
-      return res.status(400).json({ message: 'PDF file required' })
+    if (!req.file) return res.status(400).json({ message: 'PDF required' })
     const { title, subject, branch, isImportant } = req.body
     if (!title) return res.status(400).json({ message: 'Title required' })
-    const fileName = Date.now() + '-' + file.name.replace(/\s/g, '_')
-    await file.mv(path.join(DIR, fileName))
-    const ebook = await Ebook.create({ title, subject, branch, isImportant: isImportant === 'true', fileUrl: fileName })
+
+    // Upload to Cloudinary — persists across Render restarts
+    const fileUrl = await uploadPdf(req.file.buffer, req.file.originalname)
+
+    const ebook = await Ebook.create({
+      title, subject, branch,
+      isImportant: isImportant === 'true',
+      fileUrl,
+    })
     res.status(201).json({ ebook })
-  } catch (e) { res.status(500).json({ message: e.message }) }
+  } catch (e) {
+    console.error('Upload error:', e.message)
+    res.status(500).json({ message: e.message })
+  }
 })
 
 router.delete('/:id', async (req, res) => {
-  const e = await Ebook.findByIdAndDelete(req.params.id)
-  if (e?.fileUrl) { const p = path.join(DIR, e.fileUrl); if (fs.existsSync(p)) fs.unlinkSync(p) }
+  await Ebook.findByIdAndDelete(req.params.id)
   res.json({ message: 'Deleted' })
 })
 

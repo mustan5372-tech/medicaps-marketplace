@@ -1,36 +1,36 @@
 const router = require('express').Router()
-const path   = require('path')
-const jwt    = require('jsonwebtoken')
+const https  = require('https')
+const http   = require('http')
 const Ebook  = require('../models/Ebook')
 const { protect } = require('../middleware/auth')
-
-const DIR = path.resolve(__dirname, '..', 'storage', 'ebooks')
 
 router.get('/', protect, async (req, res) => {
   const ebooks = await Ebook.find().select('-fileUrl').sort({ isImportant: -1, createdAt: -1 }).limit(20)
   res.json({ ebooks })
 })
 
-// View — accept token as query param OR Authorization header
-router.get('/:id/view', async (req, res) => {
+// Proxy PDF — never expose Cloudinary URL to client
+router.get('/:id/view', protect, async (req, res) => {
   try {
-    const token = req.query.token || (req.headers.authorization || '').replace('Bearer ', '')
-    if (!token) return res.status(401).json({ message: 'Token required' })
-    jwt.verify(token, process.env.JWT_SECRET)
-
     const ebook = await Ebook.findById(req.params.id)
     if (!ebook) return res.status(404).json({ message: 'Not found' })
 
-    const fs = require('fs')
-    const filePath = path.join(DIR, ebook.fileUrl)
-    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'File missing on server' })
-
+    console.log('Streaming ebook:', ebook.title, ebook.fileUrl)
     Ebook.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {})
+
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', 'inline')
     res.setHeader('Cache-Control', 'no-store')
-    res.sendFile(filePath)
-  } catch (e) { res.status(500).json({ message: e.message }) }
+
+    const lib = ebook.fileUrl.startsWith('https') ? https : http
+    lib.get(ebook.fileUrl, (stream) => stream.pipe(res)).on('error', (e) => {
+      console.error('Stream error:', e.message)
+      res.status(502).json({ message: 'Could not fetch PDF' })
+    })
+  } catch (e) {
+    console.error('View error:', e.message)
+    res.status(500).json({ message: e.message })
+  }
 })
 
 module.exports = router

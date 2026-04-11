@@ -41,4 +41,27 @@ async function uploadImage(buffer, mimetype, folder = 'listings') {
   return `data:${mimetype};base64,${buffer.toString('base64')}`
 }
 
-module.exports = { listingUpload, avatarUpload, uploadImage }
+// Upload PDF to Cloudinary as raw resource
+async function uploadPdf(buffer, filename) {
+  const cloudinary = require('cloudinary').v2
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'medicaps/ebooks',
+        resource_type: 'raw',
+        public_id: Date.now() + '_' + filename.replace(/\s/g, '_').replace(/\.pdf$/i, ''),
+        format: 'pdf',
+      },
+      (err, result) => err ? reject(err) : resolve(result.secure_url)
+    )
+    const { Readable } = require('stream')
+    Readable.from(buffer).pipe(stream)
+  })
+}
+
+module.exports = { listingUpload, avatarUpload, uploadImage, uploadPdf }
