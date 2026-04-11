@@ -1,44 +1,42 @@
 ﻿import React, { useState, useEffect } from "react"
-import { FiUpload, FiTrash2, FiPlus, FiX } from "react-icons/fi"
+import { FiLink, FiTrash2, FiPlus, FiX } from "react-icons/fi"
 import toast from "react-hot-toast"
 import api from "../utils/api"
 
 const BRANCHES = ["Computer Science","Mechanical","Electrical","Electronics","Automobile","Robotics","Civil","First Year"]
 
-function UploadModal({ onClose, onSaved }) {
+function extractId(link) {
+  const m = link.match(/\/d\/([a-zA-Z0-9_-]+)/)
+  return m ? m[1] : null
+}
+
+function AddModal({ onClose, onSaved }) {
+  const [driveLink, setDriveLink] = useState("")
   const [title, setTitle] = useState("")
   const [subject, setSubject] = useState("")
   const [branch, setBranch] = useState("Computer Science")
   const [isImportant, setIsImportant] = useState(false)
-  const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const handleFileChange = (e) => {
-    const f = e.target.files[0]
-    if (!f) return
-    setFile(f)
-    const auto = f.name.replace(/\.pdf$/i,"").replace(/[-_]/g," ").replace(/\(.*?\)/g,"").replace(/\s+/g," ").trim()
-    setTitle(auto)
+  const handleLinkChange = (e) => {
+    const val = e.target.value
+    setDriveLink(val)
+    if (!title) {
+      const id = extractId(val)
+      if (id) setTitle("Ebook " + id.substring(0, 8))
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!title || !file) return toast.error("Title and PDF required")
+    if (!driveLink || !title) return toast.error("Drive link and title required")
     setLoading(true)
     try {
-      const fd = new FormData()
-      fd.append("file", file)
-      fd.append("title", title)
-      fd.append("subject", subject)
-      fd.append("branch", branch)
-      fd.append("isImportant", String(isImportant))
-      const res = await api.post("/admin/ebooks/upload", fd)
-      toast.success("Uploaded!")
+      const res = await api.post("/admin/ebooks/add", { driveLink, title, subject, branch, isImportant })
+      toast.success("Ebook added!")
       onSaved(res.data.ebook)
       onClose()
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Upload failed")
-    }
+    } catch (err) { toast.error(err.response?.data?.message || "Failed") }
     setLoading(false)
   }
 
@@ -46,17 +44,20 @@ function UploadModal({ onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-semibold">Upload Ebook</h3>
+          <h3 className="text-white font-semibold">Add Ebook</h3>
           <button onClick={onClose} className="text-white/40 hover:text-white"><FiX size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <label className="flex items-center gap-3 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 cursor-pointer hover:border-indigo-500/50">
-            <FiUpload className="text-white/40 shrink-0" />
-            <span className="text-sm text-white/40 truncate">{file ? file.name : "Select PDF (max 50MB)"}</span>
-            <input type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-          </label>
-          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title *"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500/50" />
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Google Drive Link *</label>
+            <input value={driveLink} onChange={handleLinkChange} placeholder="https://drive.google.com/file/d/..."
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500/50" />
+          </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Title *</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Auto-filled from link"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500/50" />
+          </div>
           <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject"
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500/50" />
           <select value={branch} onChange={e => setBranch(e.target.value)}
@@ -70,7 +71,7 @@ function UploadModal({ onClose, onSaved }) {
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/60 hover:text-white">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium disabled:opacity-50">
-              {loading ? "Uploading..." : "Upload"}
+              {loading ? "Saving..." : "Add Ebook"}
             </button>
           </div>
         </form>
@@ -112,13 +113,13 @@ export default function AdminEbooks() {
                   <p className="text-white font-medium text-sm truncate">{e.title}</p>
                   {e.isImportant && <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full shrink-0">MST</span>}
                 </div>
-                <p className="text-white/40 text-xs mt-0.5">{e.subject} · {e.branch}</p>
+                <p className="text-white/40 text-xs mt-0.5">{e.subject} · {e.branch} · <FiLink size={10} className="inline" /> Drive</p>
               </div>
               <button onClick={() => handleDelete(e._id)} className="p-2 rounded-xl hover:bg-red-500/20 text-white/50 hover:text-red-400"><FiTrash2 size={14} /></button>
             </div>
           ))}</div>
       }
-      {showModal && <UploadModal onClose={() => setShowModal(false)} onSaved={e => setEbooks(p => [e, ...p])} />}
+      {showModal && <AddModal onClose={() => setShowModal(false)} onSaved={e => setEbooks(p => [e, ...p])} />}
     </div>
   )
 }

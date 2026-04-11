@@ -64,12 +64,6 @@ app.use(cors({
   credentials: true
 }))
 app.use(express.json({ limit: '20mb' }))
-app.use(require('express-fileupload')({
-  limits: { fileSize: 50 * 1024 * 1024 },
-  abortOnLimit: true,
-  useTempFiles: true,
-  tempFileDir: '/tmp/',
-}))
 app.use(cookieParser())
 app.use(morgan('dev'))
 

@@ -5,7 +5,7 @@ const s = new mongoose.Schema({
   branch:      { type: String, default: '' },
   semester:    { type: Number, default: 4 },
   isImportant: { type: Boolean, default: false },
-  fileUrl:     { type: String, required: true }, // Cloudinary URL or base64 data URL
+  driveLink:   { type: String, required: true },
   views:       { type: Number, default: 0 },
 }, { timestamps: true })
 module.exports = mongoose.model('Ebook', s)
