@@ -195,14 +195,9 @@ export default function DeveloperSection() {
         </div>
 
         {/* Footer note */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.55, duration: 0.4 }}
-          className="text-center text-xs text-gray-400 dark:text-gray-600 mt-8"
-        >
+        <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-8">
           Built with ❤️ for MediCaps University students
-        </motion.p>
+        </p>
       </div>
     </section>
   )
