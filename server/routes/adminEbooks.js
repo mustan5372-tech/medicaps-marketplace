@@ -3,12 +3,6 @@ const cloudinary = require('cloudinary').v2
 const Ebook     = require('../models/Ebook')
 const { protect, adminOnly } = require('../middleware/auth')
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
-
 router.use(protect, adminOnly)
 
 router.get('/', async (req, res) => {
@@ -18,22 +12,38 @@ router.get('/', async (req, res) => {
 
 router.post('/upload', async (req, res) => {
   try {
-    if (!req.files?.file) return res.status(400).json({ message: 'PDF file required' })
+    console.log('FILES:', JSON.stringify(Object.keys(req.files || {})))
+    console.log('BODY:', JSON.stringify(req.body))
+    console.log('CLOUDINARY CONFIG:', {
+      cloud: process.env.CLOUDINARY_CLOUD_NAME,
+      key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING',
+      secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING',
+    })
+
+    if (!req.files?.file) return res.status(400).json({ message: 'No file received. req.files was empty.' })
     const file = req.files.file
     if (file.mimetype !== 'application/pdf') return res.status(400).json({ message: 'Only PDF allowed' })
 
-    // Auto title from filename
     let title = (req.body.title || file.name)
       .replace(/\.pdf$/i, '').replace(/[-_]/g, ' ')
       .replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim()
 
-    // Upload to Cloudinary using temp file path
+    console.log('Uploading to Cloudinary, tempFilePath:', file.tempFilePath, 'size:', file.size)
+
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key:    process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    })
+
     const result = await cloudinary.uploader.upload(file.tempFilePath, {
       resource_type: 'raw',
       folder: 'ebooks',
       use_filename: true,
       unique_filename: true,
     })
+
+    console.log('Cloudinary upload success:', result.secure_url)
 
     const ebook = await Ebook.create({
       title,
@@ -46,7 +56,7 @@ router.post('/upload', async (req, res) => {
 
     res.status(201).json({ ebook })
   } catch (e) {
-    console.error('Upload error:', e.message)
+    console.error('UPLOAD ERROR:', e.message, e.stack)
     res.status(500).json({ message: e.message })
   }
 })
