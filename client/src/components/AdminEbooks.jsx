@@ -6,27 +6,29 @@ import api from "../utils/api"
 const BRANCHES = ["Computer Science","Mechanical","Electrical","Electronics","Automobile","Robotics","Civil","First Year"]
 
 function UploadModal({ onClose, onSaved }) {
-  const [form, setForm] = useState({ title: "", subject: "", branch: "Computer Science", isImportant: false })
+  const [title, setTitle] = useState("")
+  const [subject, setSubject] = useState("")
+  const [branch, setBranch] = useState("Computer Science")
+  const [isImportant, setIsImportant] = useState(false)
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.title || !file) return toast.error("Title and PDF required")
+    if (!title || !file) return toast.error("Title and PDF required")
     setLoading(true)
     try {
-      const base64 = await new Promise((res, rej) => {
-        const r = new FileReader()
-        r.onload = () => res(r.result)
-        r.onerror = rej
-        r.readAsDataURL(file)
-      })
-      const resp = await api.post("/admin/ebooks/upload", { ...form, file: base64 })
+      const fd = new FormData()
+      fd.append("file", file)
+      fd.append("title", title)
+      fd.append("subject", subject)
+      fd.append("branch", branch)
+      fd.append("isImportant", isImportant)
+      const res = await api.post("/admin/ebooks/upload", fd, { headers: { "Content-Type": "multipart/form-data" } })
       toast.success("Uploaded!")
-      onSaved(resp.data.ebook)
+      onSaved(res.data.ebook)
       onClose()
-    } catch (err) { toast.error(err.response?.data?.message || "Failed") }
+    } catch (err) { toast.error(err.response?.data?.message || "Upload failed") }
     setLoading(false)
   }
 
@@ -38,21 +40,21 @@ function UploadModal({ onClose, onSaved }) {
           <button onClick={onClose} className="text-white/40 hover:text-white"><FiX size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input value={form.title} onChange={e => set("title", e.target.value)} placeholder="Title *"
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title *"
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500/50" />
-          <input value={form.subject} onChange={e => set("subject", e.target.value)} placeholder="Subject"
+          <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject"
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500/50" />
-          <select value={form.branch} onChange={e => set("branch", e.target.value)}
+          <select value={branch} onChange={e => setBranch(e.target.value)}
             className="w-full bg-gray-800 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none">
             {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.isImportant} onChange={e => set("isImportant", e.target.checked)} className="accent-red-500" />
+            <input type="checkbox" checked={isImportant} onChange={e => setIsImportant(e.target.checked)} className="accent-red-500" />
             <span className="text-sm text-white/70">Mark as Important</span>
           </label>
           <label className="flex items-center gap-3 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 cursor-pointer hover:border-indigo-500/50">
             <FiUpload className="text-white/40 shrink-0" />
-            <span className="text-sm text-white/40 truncate">{file ? file.name : "Select PDF (max 10MB)"}</span>
+            <span className="text-sm text-white/40 truncate">{file ? file.name : "Select PDF (max 20MB)"}</span>
             <input type="file" accept="application/pdf" className="hidden" onChange={e => setFile(e.target.files[0])} />
           </label>
           <div className="flex gap-3 pt-1">
@@ -91,26 +93,29 @@ export default function AdminEbooks() {
           <FiPlus size={15} /> Add Ebook
         </button>
       </div>
-      {loading ? <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>
-        : ebooks.length === 0 ? <p className="text-white/30 text-center py-12">No ebooks yet.</p>
-        : (
-          <div className="space-y-2">
-            {ebooks.map(e => (
-              <div key={e._id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-white font-medium text-sm truncate">{e.title}</p>
-                    {e.isImportant && <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full shrink-0">MST</span>}
+      {loading
+        ? <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>
+        : ebooks.length === 0
+          ? <p className="text-white/30 text-center py-12">No ebooks yet.</p>
+          : (
+            <div className="space-y-2">
+              {ebooks.map(e => (
+                <div key={e._id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-medium text-sm truncate">{e.title}</p>
+                      {e.isImportant && <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full shrink-0">MST</span>}
+                    </div>
+                    <p className="text-white/40 text-xs mt-0.5">{e.subject} · {e.branch}</p>
                   </div>
-                  <p className="text-white/40 text-xs mt-0.5">{e.subject} · {e.branch}</p>
+                  <button onClick={() => handleDelete(e._id)} className="p-2 rounded-xl hover:bg-red-500/20 text-white/50 hover:text-red-400">
+                    <FiTrash2 size={14} />
+                  </button>
                 </div>
-                <button onClick={() => handleDelete(e._id)} className="p-2 rounded-xl hover:bg-red-500/20 text-white/50 hover:text-red-400">
-                  <FiTrash2 size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )
+      }
       {showModal && <UploadModal onClose={() => setShowModal(false)} onSaved={e => setEbooks(p => [e, ...p])} />}
     </div>
   )
