@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../utils/api'
 import toast from 'react-hot-toast'
 import AnimatedPage from '../components/AnimatedPage'
 import AdminEbooks from '../components/AdminEbooks'
+import { useAuthStore } from '../store/authStore'
 import { FiTrash2, FiUserX, FiFlag, FiUsers, FiList, FiAlertTriangle, FiCheckCircle, FiEye, FiShield, FiEdit2, FiZap, FiBook } from 'react-icons/fi'
 
 export default function AdminDashboard() {
-  const [searchParams] = useSearchParams()
-  const [tab, setTab] = useState(searchParams.get('tab') || 'listings')
+  const { tab: urlTab } = useParams()
+  const navigate = useNavigate()
+  const { user: currentUser } = useAuthStore()
+  const tab = urlTab || 'listings'
+  const setTab = (t) => navigate(`/admin/${t}`)
   const [listings, setListings] = useState([])
   const [users, setUsers] = useState([])
   const [reports, setReports] = useState([])
@@ -241,16 +245,36 @@ export default function AdminDashboard() {
                     {u.avatar ? <img src={u.avatar} alt="" className="w-full h-full object-cover" /> : u.name?.[0]?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-gray-900 dark:text-white">{u.name}</p>
+                      {u.role === 'super_admin' && <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Super Admin</span>}
                       {u.role === 'admin' && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Admin</span>}
+                      {u.role === 'ebook_uploader' && <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">Ebook Uploader</span>}
                       {u.unlimitedBoost && <span className="text-xs bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1"><FiZap className="w-3 h-3" /> Unlimited Boost</span>}
                       {u.banned && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Banned</span>}
                     </div>
                     <p className="text-sm text-gray-500">{u.email}</p>
                   </div>
                   {u.role !== 'admin' && (
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap items-center">
+                      {currentUser?.role === 'super_admin' && (
+                        <select
+                          value={u.role}
+                          onChange={async (e) => {
+                            try {
+                              await api.patch('/admin/set-role', { userId: u._id, role: e.target.value })
+                              setUsers(prev => prev.map(x => x._id === u._id ? { ...x, role: e.target.value } : x))
+                              toast.success('Role updated')
+                            } catch { toast.error('Failed') }
+                          }}
+                          className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                        >
+                          <option value="user">User</option>
+                          <option value="ebook_uploader">Ebook Uploader</option>
+                          <option value="admin">Admin</option>
+                          <option value="super_admin">Super Admin</option>
+                        </select>
+                      )}
                       {!u.isSellerVerified && (
                         <motion.button whileTap={{ scale: 0.9 }} onClick={async () => {
                           await api.patch(`/admin/users/${u._id}/verify-seller`)

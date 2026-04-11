@@ -1,9 +1,9 @@
 const router    = require('express').Router()
 const cloudinary = require('cloudinary').v2
 const Ebook     = require('../models/Ebook')
-const { protect, adminOnly } = require('../middleware/auth')
+const { protect, checkRole } = require('../middleware/auth')
 
-router.use(protect, adminOnly)
+router.use(protect, checkRole(['admin', 'super_admin', 'ebook_uploader']))
 
 router.get('/', async (req, res) => {
   const ebooks = await Ebook.find().sort({ createdAt: -1 })

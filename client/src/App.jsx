@@ -69,6 +69,7 @@ function AnimatedRoutes() {
           </Route>
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/:tab" element={<AdminDashboard />} />
           </Route>
         </Routes>
       </Suspense>
