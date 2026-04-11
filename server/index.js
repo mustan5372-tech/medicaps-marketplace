@@ -66,7 +66,7 @@ app.use(cors({
   credentials: true
 }))
 app.use(express.json({ limit: '20mb' }))
-app.use(fileUpload({ limits: { fileSize: 20 * 1024 * 1024 }, abortOnLimit: true }))
+app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 }, abortOnLimit: true, useTempFiles: true, tempFileDir: '/tmp/' }))
 app.use(fileUpload({ limits: { fileSize: 20 * 1024 * 1024 } }))
 app.use(cookieParser())
 app.use(morgan('dev'))
