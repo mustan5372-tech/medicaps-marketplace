@@ -1,85 +1,82 @@
 const router = require('express').Router()
-const EbookRequest = require('../models/EbookRequest')
-const User = require('../models/User')
-const Notification = require('../models/Notification')
+const jwt = require('jsonwebtoken')
+const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args))
+const Ebook = require('../models/Ebook')
 const { protect } = require('../middleware/auth')
 
-const FREE_LIMIT = 3
-
-// GET /api/ebooks — all requests feed
+// ── GET /api/ebooks — public library listing (no fileUrl exposed) ──────────
 router.get('/', protect, async (req, res) => {
   try {
-    const requests = await EbookRequest.find()
-      .populate('requestedBy', 'name avatar')
+    const { branch } = req.query
+    const query = branch && branch !== 'All' ? { branch } : {}
+    const ebooks = await Ebook.find(query)
+      .select('-fileUrl')
       .sort({ createdAt: -1 })
-      .limit(50)
-    res.json({ requests })
+    res.json({ ebooks })
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 
-// GET /api/ebooks/user — current user's requests + count
-router.get('/user', protect, async (req, res) => {
+// ── POST /api/ebooks/:id/token — get short-lived view token ───────────────
+router.post('/:id/token', protect, async (req, res) => {
   try {
-    const requests = await EbookRequest.find({ requestedBy: req.user._id }).sort({ createdAt: -1 })
-    const user = await User.findById(req.user._id).select('ebookRequestCount')
-    const count = user.ebookRequestCount || 0
-    res.json({ requests, requestCount: count, freeLeft: Math.max(0, FREE_LIMIT - count) })
+    const ebook = await Ebook.findById(req.params.id).select('_id')
+    if (!ebook) return res.status(404).json({ message: 'Ebook not found' })
+
+    const token = jwt.sign(
+      { ebookId: ebook._id.toString(), userId: req.user._id.toString() },
+      process.env.JWT_SECRET,
+      { expiresIn: 10 * 60 } // 10 min
+    )
+    res.json({ token, expiresIn: 600 })
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 
-// POST /api/ebooks/request — submit a free request + notify all admins
-router.post('/request', protect, async (req, res) => {
+// ── GET /api/ebooks/:id/view?token=xxx — secure PDF proxy stream ──────────
+router.get('/:id/view', async (req, res) => {
   try {
-    const { bookName, subject, author } = req.body
-    if (!bookName || !subject) return res.status(400).json({ message: 'Book name and subject are required' })
+    const { token } = req.query
+    if (!token) return res.status(401).json({ message: 'Token required' })
 
-    const user = await User.findById(req.user._id).select('ebookRequestCount name')
-    const count = user.ebookRequestCount || 0
-
-    if (count >= FREE_LIMIT) {
-      return res.status(403).json({ message: 'Free requests exhausted. Paid requests coming soon.' })
+    let decoded
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET)
+    } catch {
+      return res.status(401).json({ message: 'Invalid or expired token' })
     }
 
-    const request = await EbookRequest.create({
-      bookName,
-      subject,
-      author: author || '',
-      requestedBy: req.user._id,
-      isFree: true,
+    if (decoded.ebookId !== req.params.id) {
+      return res.status(403).json({ message: 'Token mismatch' })
+    }
+
+    const ebook = await Ebook.findById(req.params.id).select('fileUrl')
+    if (!ebook) return res.status(404).json({ message: 'Ebook not found' })
+
+    // Increment view count (fire-and-forget)
+    Ebook.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {})
+
+    // Resolve Google Drive share links → direct stream URL
+    let pdfUrl = ebook.fileUrl
+    const gdMatch = pdfUrl.match(/\/d\/([a-zA-Z0-9_-]+)/)
+    if (gdMatch) {
+      pdfUrl = `https://drive.google.com/uc?export=download&id=${gdMatch[1]}`
+    }
+
+    const response = await fetch(pdfUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      redirect: 'follow',
     })
 
-    await User.findByIdAndUpdate(req.user._id, { $inc: { ebookRequestCount: 1 } })
+    if (!response.ok) return res.status(502).json({ message: 'Could not fetch PDF' })
 
-    // Notify all admins — DB + real-time socket
-    try {
-      const admins = await User.find({ role: 'admin' }).select('_id')
-      const io = req.app.get('io')
+    // Inline only — no download
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', 'inline')
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+    res.setHeader('Content-Security-Policy', "default-src 'none'")
 
-      for (const admin of admins) {
-        const notif = await Notification.create({
-          userId: admin._id,
-          senderId: req.user._id,
-          type: 'ebookRequest',
-          message: `📚 New ebook request: "${bookName}" by ${user.name}`,
-          ebookRequestId: request._id,
-        })
-
-        const populated = await notif.populate('senderId', 'name avatar')
-
-        // Push real-time to admin's socket room
-        if (io) {
-          io.to(admin._id.toString()).emit('new_notification', {
-            ...populated.toObject(),
-            ebookRequestId: request._id,
-          })
-        }
-      }
-    } catch (notifErr) {
-      console.error('Admin notification error:', notifErr.message)
-      // Don't fail the request if notification fails
-    }
-
-    res.status(201).json({ request })
+    response.body.pipe(res)
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 

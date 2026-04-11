@@ -1,10 +1,10 @@
-ï»¿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================
    DESIGN TOKEN SYSTEM
-   Default tokens â€” used by all components
+   Default tokens — used by all components
    ============================================ */
 :root {
   --bg-page:        #f9fafb;
@@ -259,22 +259,7 @@ html[data-glass="true"].dark .input {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
 
-/* ============================================
-   SMOOTH GLOBAL TRANSITION ON THEME SWITCH
-   ============================================ */
-*, *::before, *::after {
-  transition:
-    background-color 0.35s ease,
-    border-color 0.35s ease,
-    box-shadow 0.35s ease,
-    color 0.2s ease;
-}
-
-/* But don't slow down animations */
-.motion-safe\:transition-none,
-[data-framer-motion] {
-  transition: none !important;
-}
+/* Theme transitions scoped to specific properties only */
 
 @layer base {
   body {
@@ -334,17 +319,9 @@ html[data-glass="true"].dark .input {
    SCROLL & ANIMATION PERFORMANCE
    ============================================ */
 
-/* CSS smooth scroll fallback (for browsers without Lenis) */
-html {
-  scroll-behavior: smooth;
-}
+/* Native scroll — no smooth-scroll override */
 
-/* GPU-accelerate elements that animate on scroll */
-.group,
-[data-framer-motion],
-.skeleton {
-  will-change: transform;
-}
+.skeleton { will-change: transform; }
 
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
@@ -353,7 +330,6 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  html { scroll-behavior: auto; }
 }
 
 
@@ -361,25 +337,11 @@ html {
    HARDWARE ACCELERATION & PAINT CONTAINMENT
    ============================================ */
 
-/* Force GPU layer for elements that animate */
-.group,
-[data-framer-motion] {
-  transform: translateZ(0);
-  will-change: transform, opacity;
-}
 
-/* Contain paint for listing cards â€” prevents repaints propagating */
+
+/* Contain paint for listing cards — prevents repaints propagating */
 .group {
   contain: layout style;
 }
 
-/* Reduce blur on low-power / mobile */
-@media (max-width: 768px) {
-  html[data-glass="true"] {
-    --blur: blur(8px) saturate(140%);
-  }
-  html[data-glass="true"] nav {
-    backdrop-filter: blur(12px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
-  }
-}
+

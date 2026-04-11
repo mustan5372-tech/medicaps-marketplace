@@ -36,12 +36,14 @@ export default function Home() {
   const [hotListings, setHotListings] = useState([])
   const totalPages = Math.ceil(total / 12)
 
-  // Parallax for hero orbs
   const heroRef = useRef(null)
-  const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const orb1Y = useTransform(heroScroll, [0, 1], [0, -60])
-  const orb2Y = useTransform(heroScroll, [0, 1], [0, -40])
-  const heroContentY = useTransform(heroScroll, [0, 1], [0, 30])
+
+  // Parallax — scoped to hero element, runs on compositor thread (no scroll lag)
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
+  const orb1Y   = useTransform(scrollYProgress, [0, 1], [0, -80])
+  const orb2Y   = useTransform(scrollYProgress, [0, 1], [0, -50])
+  const orb3Y   = useTransform(scrollYProgress, [0, 1], [0, -30])
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 40])
 
   useEffect(() => { fetchListings() }, [filters, page])
 
@@ -65,12 +67,16 @@ export default function Home() {
         <div ref={heroRef} className="relative mb-10 overflow-hidden rounded-3xl">
           {/* Animated gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-700" />
-          {/* Parallax orbs */}
-          <motion.div style={{ y: orb1Y }} className="absolute -top-20 -left-20 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl pointer-events-none" />
-          <motion.div style={{ y: orb2Y }} className="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-300/20 rounded-full blur-2xl pointer-events-none" />
+          {/* Parallax orbs — each layer moves at a different speed for depth */}
+          <motion.div style={{ y: orb1Y, willChange: 'transform' }}
+            className="absolute -top-20 -left-20 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl pointer-events-none" />
+          <motion.div style={{ y: orb2Y, willChange: 'transform' }}
+            className="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-400/30 rounded-full blur-3xl pointer-events-none" />
+          <motion.div style={{ y: orb3Y, willChange: 'transform' }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-300/20 rounded-full blur-2xl pointer-events-none" />
 
-          <motion.div style={{ y: heroContentY }} className="relative z-10 p-10 md:p-16 text-center">
+          {/* Foreground content moves slightly slower than viewport = depth illusion */}
+          <motion.div style={{ y: contentY, willChange: 'transform' }} className="relative z-10 p-10 md:p-16 text-center">
             <motion.div variants={staggerContainer(0.1)} initial="hidden" animate="show">
               <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-5 border border-white/30">
                 <FiTrendingUp className="w-3.5 h-3.5" /> MediCaps University Marketplace

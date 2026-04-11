@@ -1,7 +1,5 @@
-import { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
-import { FiGithub, FiMail, FiCode, FiUsers } from 'react-icons/fi'
-import { useParallax } from '../hooks/useParallax'
+import { motion } from 'framer-motion'
+import { FiGithub, FiMail, FiUsers } from 'react-icons/fi'
 
 const team = [
   {
@@ -50,15 +48,9 @@ const team = [
   },
 ]
 
-function TeamCard({ member, delay, inView }) {
-  const { ref: parallaxRef, y } = useParallax(0.12, [-20, 20])
+function TeamCard({ member }) {
   return (
     <motion.div
-      ref={parallaxRef}
-      style={{ y }}
-      initial={{ opacity: 0, y: 32 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       whileHover={{ y: -6, boxShadow: '0 32px 64px rgba(0,0,0,0.13)' }}
       className="relative bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 p-7 flex flex-col items-center text-center shadow-lg overflow-hidden transition-shadow duration-300"
     >
@@ -66,14 +58,9 @@ function TeamCard({ member, delay, inView }) {
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50/80 via-transparent to-gray-50/40 dark:from-gray-800/30 dark:via-transparent dark:to-gray-800/10 pointer-events-none" />
 
       {/* Avatar */}
-      <motion.div
-        initial={{ scale: 0.75, opacity: 0 }}
-        animate={inView ? { scale: 1, opacity: 1 } : {}}
-        transition={{ delay: delay + 0.1, duration: 0.4, type: 'spring', stiffness: 220 }}
-        className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${member.gradient} flex items-center justify-center shadow-xl ${member.shadow} mb-4`}
-      >
+      <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${member.gradient} flex items-center justify-center shadow-xl ${member.shadow} mb-4`}>
         <span className="text-white text-3xl font-extrabold">{member.initial}</span>
-      </motion.div>
+      </div>
 
       {/* Badge */}
       <span className={`text-xs font-semibold px-3 py-1 rounded-full border mb-3 ${member.badgeColor}`}>
@@ -114,15 +101,9 @@ function TeamCard({ member, delay, inView }) {
   )
 }
 
-function FounderCard({ member, delay, inView }) {
-  const { ref: parallaxRef, y } = useParallax(0.12, [-20, 20])
+function FounderCard({ member }) {
   return (
     <motion.div
-      ref={parallaxRef}
-      style={{ y }}
-      initial={{ opacity: 0, y: 32 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       whileHover={{ y: -6, boxShadow: '0 0 40px rgba(99,102,241,0.22), 0 32px 64px rgba(0,0,0,0.15)' }}
       className="relative bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 flex flex-col shadow-xl overflow-hidden transition-all duration-300"
     >
@@ -184,50 +165,32 @@ function FounderCard({ member, delay, inView }) {
 }
 
 export default function DeveloperSection() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
-
   return (
-    <section ref={ref} className="py-16 px-4">
+    <section className="py-16 px-4">
       <div className="max-w-3xl mx-auto">
 
         {/* Section label */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4 }}
-          className="flex items-center justify-center mb-3"
-        >
+        <div className="flex items-center justify-center mb-3">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-semibold border border-blue-100 dark:border-blue-800">
             <FiUsers className="w-3.5 h-3.5" />
             Meet the Team
           </div>
-        </motion.div>
+        </div>
 
         {/* Heading */}
-        <motion.h2
-          initial={{ opacity: 0, y: 12 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.08, duration: 0.4 }}
-          className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2"
-        >
+        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">
           The people behind MediCaps Market
-        </motion.h2>
+        </h2>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.15, duration: 0.4 }}
-          className="text-sm text-center text-gray-500 dark:text-gray-400 mb-10"
-        >
+        <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-10">
           Built by students, for students.
-        </motion.p>
+        </p>
 
         {/* Cards grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
           {team.map((member, i) => i === 0
-            ? <FounderCard key={member.name} member={member} delay={0.2} inView={inView} />
-            : <TeamCard key={member.name} member={member} delay={0.32} inView={inView} />
+            ? <FounderCard key={member.name} member={member} />
+            : <TeamCard key={member.name} member={member} />
           )}
         </div>
 

@@ -1,40 +1,74 @@
 const router = require('express').Router()
-const EbookRequest = require('../models/EbookRequest')
+const multer = require('multer')
+const Ebook = require('../models/Ebook')
 const { protect, adminOnly } = require('../middleware/auth')
+const { uploadImage } = require('../middleware/upload')
 
 router.use(protect, adminOnly)
 
-// GET /api/admin/ebooks — all requests with stats
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB cover image limit
+})
+
+// GET /api/admin/ebooks — all ebooks with fileUrl (admin only)
 router.get('/', async (req, res) => {
   try {
-    const { status } = req.query
-    const query = status && status !== 'all' ? { status } : {}
-    const [requests, total, pending, fulfilled] = await Promise.all([
-      EbookRequest.find(query)
-        .populate('requestedBy', 'name email avatar')
-        .sort({ createdAt: -1 }),
-      EbookRequest.countDocuments(),
-      EbookRequest.countDocuments({ status: 'pending' }),
-      EbookRequest.countDocuments({ status: 'fulfilled' }),
-    ])
-    res.json({ requests, stats: { total, pending, fulfilled } })
+    const ebooks = await Ebook.find().sort({ createdAt: -1 })
+    res.json({ ebooks })
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 
-// PATCH /api/admin/ebooks/:id/fulfill — fulfill with a PDF link
-router.patch('/:id/fulfill', async (req, res) => {
+// POST /api/admin/ebooks — upload new ebook
+router.post('/', upload.single('cover'), async (req, res) => {
   try {
-    const { ebookUrl } = req.body
-    if (!ebookUrl) return res.status(400).json({ message: 'PDF link is required' })
+    const { title, subject, branch, fileUrl, isImportant } = req.body
+    if (!title || !subject || !branch || !fileUrl) {
+      return res.status(400).json({ message: 'title, subject, branch and fileUrl are required' })
+    }
 
-    const request = await EbookRequest.findByIdAndUpdate(
-      req.params.id,
-      { ebookUrl, status: 'fulfilled' },
-      { new: true }
-    ).populate('requestedBy', 'name email')
+    let coverUrl = ''
+    if (req.file) {
+      coverUrl = await uploadImage(req.file.buffer, req.file.mimetype, 'ebooks')
+    }
 
-    if (!request) return res.status(404).json({ message: 'Request not found' })
-    res.json({ request })
+    const ebook = await Ebook.create({
+      title,
+      subject,
+      branch,
+      fileUrl,
+      coverUrl,
+      isImportant: isImportant === 'true' || isImportant === true,
+      uploadedBy: req.user._id,
+    })
+
+    res.status(201).json({ ebook })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+// PATCH /api/admin/ebooks/:id — update ebook
+router.patch('/:id', upload.single('cover'), async (req, res) => {
+  try {
+    const updates = {}
+    const fields = ['title', 'subject', 'branch', 'fileUrl', 'isImportant']
+    fields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f] })
+    if (updates.isImportant !== undefined) updates.isImportant = updates.isImportant === 'true' || updates.isImportant === true
+
+    if (req.file) {
+      updates.coverUrl = await uploadImage(req.file.buffer, req.file.mimetype, 'ebooks')
+    }
+
+    const ebook = await Ebook.findByIdAndUpdate(req.params.id, updates, { new: true })
+    if (!ebook) return res.status(404).json({ message: 'Not found' })
+    res.json({ ebook })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+})
+
+// DELETE /api/admin/ebooks/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    await Ebook.findByIdAndDelete(req.params.id)
+    res.json({ message: 'Deleted' })
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 
