@@ -39,9 +39,8 @@ function UploadModal({ onClose, onSaved }) {
       fd.append("branch", branch)
       fd.append("isImportant", isImportant)
       const res = await api.post("/admin/ebooks/upload", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: p => {
-          const pct = Math.round((p.loaded * 100) / p.total)
+          const pct = p.total ? Math.round((p.loaded * 100) / p.total) : 0
           toast.loading("Uploading... " + pct + "%", { id: "upload" })
         }
       })
