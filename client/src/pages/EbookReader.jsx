@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Document, Page, pdfjs } from "react-pdf"
-import { useAuthStore } from "../store/authStore"
 import "react-pdf/dist/Page/AnnotationLayer.css"
 import "react-pdf/dist/Page/TextLayer.css"
 
@@ -11,10 +10,11 @@ const BASE = import.meta.env.VITE_API_URL || "https://medicaps-backend-7cwm.onre
 export default function EbookReader() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const token = useAuthStore(s => s.token)
   const [numPages, setNumPages] = useState(null)
   const [page, setPage] = useState(1)
   const ref = useRef(null)
+  const token = localStorage.getItem("token") || ""
+  const pdfUrl = BASE + "/ebooks/" + id + "/view?token=" + token
 
   useEffect(() => {
     const block = e => {
@@ -46,10 +46,10 @@ export default function EbookReader() {
       </div>
       <div ref={ref} className="flex-1 overflow-auto flex justify-center py-6" style={{ userSelect: "none" }}>
         <Document
-          file={{ url: BASE + "/ebooks/" + id + "/view", httpHeaders: { Authorization: "Bearer " + token } }}
+          file={pdfUrl}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           loading={<p className="text-white/40 mt-20">Loading PDF...</p>}
-          error={<p className="text-red-400 mt-20">Failed to load. Check if backend is running.</p>}
+          error={<p className="text-red-400 mt-20 text-center px-4">Failed to load PDF.<br/>Make sure backend is running and you are logged in.</p>}
         >
           <Page pageNumber={page} renderTextLayer={false} renderAnnotationLayer={false} />
         </Document>
