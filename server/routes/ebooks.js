@@ -34,6 +34,14 @@ router.get('/:id/view', async (req, res) => {
     res.setHeader('Content-Disposition', 'inline')
     res.setHeader('Cache-Control', 'no-store')
 
+    // If it's a base64 data URL, decode and send directly
+    if (ebook.fileUrl.startsWith('data:')) {
+      const base64 = ebook.fileUrl.split(',')[1]
+      const buf = Buffer.from(base64, 'base64')
+      res.setHeader('Content-Length', buf.length)
+      return res.send(buf)
+    }
+
     // If it's a full URL (Cloudinary), proxy it
     if (ebook.fileUrl.startsWith('http')) {
       const lib = ebook.fileUrl.startsWith('https') ? https : http

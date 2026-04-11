@@ -41,27 +41,46 @@ async function uploadImage(buffer, mimetype, folder = 'listings') {
   return `data:${mimetype};base64,${buffer.toString('base64')}`
 }
 
-// Upload PDF to Cloudinary as raw resource
+// Upload PDF to Cloudinary as raw resource, fallback to base64 in DB
 async function uploadPdf(buffer, filename) {
-  const cloudinary = require('cloudinary').v2
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: 'medicaps/ebooks',
-        resource_type: 'raw',
-        public_id: Date.now() + '_' + filename.replace(/\s/g, '_').replace(/\.pdf$/i, ''),
-        format: 'pdf',
-      },
-      (err, result) => err ? reject(err) : resolve(result.secure_url)
-    )
-    const { Readable } = require('stream')
-    Readable.from(buffer).pipe(stream)
-  })
+  const isConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_CLOUD_NAME !== 'medicapsmart' &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_KEY !== 'placeholder'
+
+  if (isConfigured) {
+    const cloudinary = require('cloudinary').v2
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    })
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'medicaps/ebooks',
+          resource_type: 'raw',
+          public_id: Date.now() + '_' + filename.replace(/\s/g, '_').replace(/\.pdf$/i, ''),
+          format: 'pdf',
+        },
+        (err, result) => {
+          if (err) {
+            console.error('Cloudinary PDF upload failed, falling back to base64:', err.message)
+            // Fallback: store as base64 data URL
+            resolve('data:application/pdf;base64,' + buffer.toString('base64'))
+          } else {
+            resolve(result.secure_url)
+          }
+        }
+      )
+      const { Readable } = require('stream')
+      Readable.from(buffer).pipe(stream)
+    })
+  }
+
+  // No Cloudinary — store as base64 directly in MongoDB
+  console.log('Cloudinary not configured, storing PDF as base64')
+  return 'data:application/pdf;base64,' + buffer.toString('base64')
 }
 
 module.exports = { listingUpload, avatarUpload, uploadImage, uploadPdf }
