@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Document, Page, pdfjs } from "react-pdf"
+import api from "../utils/api"
 import "react-pdf/dist/Page/AnnotationLayer.css"
 import "react-pdf/dist/Page/TextLayer.css"
 
@@ -12,8 +13,16 @@ export default function EbookReader() {
   const navigate = useNavigate()
   const [numPages, setNumPages] = useState(null)
   const [page, setPage] = useState(1)
+  const [pdfUrl, setPdfUrl] = useState(null)
+  const [error, setError] = useState(null)
   const ref = useRef(null)
-  const token = localStorage.getItem("token") || ""
+
+  useEffect(() => {
+    // Get a signed token then build the URL
+    api.get("/ebooks/" + id + "/token")
+      .then(r => setPdfUrl(BASE + "/ebooks/" + id + "/view?token=" + r.data.token))
+      .catch(() => setError("Could not authenticate. Please log in again."))
+  }, [id])
 
   useEffect(() => {
     const block = e => {
@@ -44,14 +53,18 @@ export default function EbookReader() {
         </div>
       </div>
       <div ref={ref} className="flex-1 overflow-auto flex justify-center py-6" style={{ userSelect: "none" }}>
-        <Document
-          file={{ url: BASE + "/ebooks/" + id + "/view", httpHeaders: { Authorization: "Bearer " + token } }}
-          onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-          loading={<p className="text-white/40 mt-20">Loading PDF...</p>}
-          error={<p className="text-red-400 mt-20 text-center px-4">Failed to load PDF.</p>}
-        >
-          <Page pageNumber={page} renderTextLayer={false} renderAnnotationLayer={false} />
-        </Document>
+        {error && <p className="text-red-400 mt-20 text-center">{error}</p>}
+        {!error && !pdfUrl && <p className="text-white/40 mt-20">Preparing viewer...</p>}
+        {pdfUrl && (
+          <Document
+            file={pdfUrl}
+            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+            loading={<p className="text-white/40 mt-20">Loading PDF...</p>}
+            error={<p className="text-red-400 mt-20 text-center">Failed to load PDF. Please re-upload this ebook.</p>}
+          >
+            <Page pageNumber={page} renderTextLayer={false} renderAnnotationLayer={false} />
+          </Document>
+        )}
       </div>
     </div>
   )
