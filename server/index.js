@@ -14,7 +14,6 @@ const morgan = require('morgan')
 const rateLimit = require('express-rate-limit')
 
 const fileUpload = require('express-fileupload')
-const fileUpload = require('express-fileupload')
 const authRoutes = require('./routes/auth')
 const listingRoutes = require('./routes/listings')
 const chatRoutes = require('./routes/chat')
@@ -66,7 +65,6 @@ app.use(cors({
   credentials: true
 }))
 app.use(express.json({ limit: '20mb' }))
-app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 }, abortOnLimit: true, useTempFiles: true, tempFileDir: '/tmp/' }))
 app.use(fileUpload({ limits: { fileSize: 20 * 1024 * 1024 } }))
 app.use(cookieParser())
 app.use(morgan('dev'))
