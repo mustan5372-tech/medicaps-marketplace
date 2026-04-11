@@ -6,6 +6,7 @@ const s = new mongoose.Schema({
   semester:    { type: Number, default: 4 },
   isImportant: { type: Boolean, default: false },
   driveLink:   { type: String, required: true },
+  author:      { type: String, default: '' },
   views:       { type: Number, default: 0 },
 }, { timestamps: true })
 module.exports = mongoose.model('Ebook', s)

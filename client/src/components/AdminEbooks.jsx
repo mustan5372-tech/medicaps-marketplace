@@ -25,6 +25,10 @@ function AddModal({ onClose, onSaved }) {
       const id = extractId(val)
       if (id) setTitle("Ebook " + id.substring(0, 8))
     }
+    if (!author) {
+      const id = extractId(val)
+      if (id) setAuthor("Unknown Author")
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -32,7 +36,7 @@ function AddModal({ onClose, onSaved }) {
     if (!driveLink || !title) return toast.error("Drive link and title required")
     setLoading(true)
     try {
-      const res = await api.post("/admin/ebooks/add", { driveLink, title, subject, branch, isImportant })
+      const res = await api.post("/admin/ebooks/add", { driveLink, title, author, subject, branch, isImportant })
       toast.success("Ebook added!")
       onSaved(res.data.ebook)
       onClose()
@@ -113,7 +117,7 @@ export default function AdminEbooks() {
                   <p className="text-white font-medium text-sm truncate">{e.title}</p>
                   {e.isImportant && <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full shrink-0">MST</span>}
                 </div>
-                <p className="text-white/40 text-xs mt-0.5">{e.subject} · {e.branch} · <FiLink size={10} className="inline" /> Drive</p>
+                <p className="text-white/40 text-xs mt-0.5">{e.subject} · {e.branch}{e.author ? " · " + e.author : ""} · <FiLink size={10} className="inline" /> Drive</p>
               </div>
               <button onClick={() => handleDelete(e._id)} className="p-2 rounded-xl hover:bg-red-500/20 text-white/50 hover:text-red-400"><FiTrash2 size={14} /></button>
             </div>
