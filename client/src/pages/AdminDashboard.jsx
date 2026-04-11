@@ -14,7 +14,11 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([])
   const [reports, setReports] = useState([])
   const [stats, setStats] = useState({})
-  const [loading, setLoading] = useState(true)
+  const [loadingStats, setLoadingStats] = useState(true)
+  const [loadingListings, setLoadingListings] = useState(true)
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [loadingReports, setLoadingReports] = useState(true)
+  const [ebooksFetched, setEbooksFetched] = useState(false)
   const [flagModal, setFlagModal] = useState(null)
   const [flagReason, setFlagReason] = useState('')
   const [announcements, setAnnouncements] = useState([])
@@ -25,26 +29,13 @@ export default function AdminDashboard() {
   const [boostModal, setBoostModal] = useState(null)
   const [boostDuration, setBoostDuration] = useState(30)
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      const [sRes, lRes, uRes, rRes, aRes] = await Promise.all([
-        api.get('/admin/stats'),
-        api.get('/admin/listings'),
-        api.get('/admin/users'),
-        api.get('/admin/reports'),
-        api.get('/admin/announcements'),
-      ])
-      setStats(sRes.data)
-      setListings(lRes.data.listings)
-      setUsers(uRes.data.users)
-      setReports(rRes.data.reports)
-      setAnnouncements(aRes.data.announcements || [])
-    } catch {}
-    setLoading(false)
-  }
-
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    api.get('/admin/stats').then(r => setStats(r.data)).finally(() => setLoadingStats(false))
+    api.get('/admin/listings').then(r => setListings(r.data.listings)).finally(() => setLoadingListings(false))
+    api.get('/admin/users').then(r => setUsers(r.data.users)).finally(() => setLoadingUsers(false))
+    api.get('/admin/reports').then(r => setReports(r.data.reports)).finally(() => setLoadingReports(false))
+    api.get('/admin/announcements').then(r => setAnnouncements(r.data.announcements || [])).catch(() => {})
+  }, [])
 
   const deleteListing = async (id) => {
     if (!confirm('Delete this listing permanently?')) return
@@ -181,7 +172,9 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {loading ? <div className="h-40 skeleton rounded-2xl" /> : (
+      {(loadingListings || loadingUsers || loadingReports) ? (
+        <div className="space-y-3">{Array.from({length:4}).map((_,i)=><div key={i} className="h-16 skeleton rounded-2xl"/>)}</div>
+      ) : (
         <>
           {/* Listings & Flagged */}
           {(tab === 'listings' || tab === 'flagged') && (
