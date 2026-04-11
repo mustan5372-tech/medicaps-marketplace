@@ -16,14 +16,13 @@ router.get('/:id/token', protect, async (req, res) => {
   res.json({ token })
 })
 
-// No auth middleware — token in query param, react-pdf fetches as plain URL
+// No auth middleware — accepts JWT directly as query param
 router.get('/:id/view', async (req, res) => {
   try {
-    const { token } = req.query
-    if (token) {
-      try { jwt.verify(token, process.env.JWT_SECRET) }
-      catch { return res.status(401).json({ message: 'Invalid token' }) }
-    }
+    const token = req.query.token
+    if (!token) return res.status(401).json({ message: 'Token required' })
+    try { jwt.verify(token, process.env.JWT_SECRET) }
+    catch { return res.status(401).json({ message: 'Invalid token' }) }
 
     const ebook = await Ebook.findById(req.params.id)
     if (!ebook) return res.status(404).json({ message: 'Not found' })
