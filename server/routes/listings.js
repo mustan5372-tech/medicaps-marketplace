@@ -10,7 +10,7 @@ const { protect } = require('../middleware/auth')
 router.get('/', async (req, res) => {
   try {
     const { search, category, condition, minPrice, maxPrice, sort, page = 1, limit = 12, seller } = req.query
-    const query = { isActive: true, status: { $ne: 'deleted' }, $or: [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }] }
+    const query = { isActive: true, status: { $ne: 'deleted' } }
 
     if (search) query.$text = { $search: search }
     if (category) query.category = category
