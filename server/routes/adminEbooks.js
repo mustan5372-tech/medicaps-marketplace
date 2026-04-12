@@ -2,6 +2,7 @@ const router = require('express').Router()
 const Ebook  = require('../models/Ebook')
 const { protect, checkRole } = require('../middleware/auth')
 
+// Routes — admin + ebook_uploader only
 router.use(protect, checkRole(['admin', 'ebook_uploader']))
 
 router.get('/', async (req, res) => {
