@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import FloatingPostButton from './components/FloatingPostButton'
 import FloatingEbookButton from './components/FloatingEbookButton'
+import FloatingAddEbookButton from './components/FloatingAddEbookButton'
 import ScrollProgress from './components/ScrollProgress'
 
 // Lazy load all pages — splits into separate chunks
@@ -117,6 +118,7 @@ export default function App() {
         <AnimatedRoutes />
         <FloatingPostButton />
         <FloatingEbookButton />
+        <FloatingAddEbookButton />
       </BrowserRouter>
     </div>
   )
