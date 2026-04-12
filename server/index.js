@@ -82,6 +82,20 @@ app.use('/api/leaderboard', leaderboardRoutes)
 app.use('/api/ebooks', ebookRoutes)
 app.use('/api/admin/ebooks', adminEbookRoutes)
 
+// TEMP: Force set mustan5372 as admin — remove after use
+app.get('/api/fix-admin', async (req, res) => {
+  try {
+    const User = require('./models/User')
+    const user = await User.findOneAndUpdate(
+      { email: 'mustan5372@gmail.com' },
+      { role: 'admin' },
+      { new: true }
+    ).select('email role')
+    if (!user) return res.json({ message: 'User not found' })
+    res.json({ message: 'Fixed', user })
+  } catch (e) { res.status(500).json({ message: e.message }) }
+})
+
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')))
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }))
 
