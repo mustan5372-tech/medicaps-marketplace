@@ -119,17 +119,17 @@ mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('MongoDB connected')
 
-    // Auto-create super admin if not exists
+    // Auto-ensure mustan5372 is admin
     const User = require('./models/User')
     const bcrypt = require('bcryptjs')
     const existing = await User.findOne({ email: 'mustan5372@gmail.com' })
     if (!existing) {
       const hashed = await bcrypt.hash('Mustan@525', 10)
-      await User.create({ name: 'Mustansir', email: 'mustan5372@gmail.com', password: hashed, role: 'super_admin', isVerified: true })
-      console.log('Super admin created')
-    } else if (existing.role !== 'super_admin') {
-      await User.findByIdAndUpdate(existing._id, { role: 'super_admin' })
-      console.log('Super admin role updated')
+      await User.create({ name: 'Mustansir', email: 'mustan5372@gmail.com', password: hashed, role: 'admin', isVerified: true })
+      console.log('Admin created')
+    } else if (!['admin'].includes(existing.role)) {
+      await User.findByIdAndUpdate(existing._id, { role: 'admin' })
+      console.log('Admin role updated')
     }
 
     const PORT = process.env.PORT || 5000

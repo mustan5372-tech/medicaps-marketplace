@@ -247,7 +247,6 @@ export default function AdminDashboard() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-gray-900 dark:text-white">{u.name}</p>
-                      {u.role === 'super_admin' && <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Super Admin</span>}
                       {u.role === 'admin' && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Admin</span>}
                       {u.role === 'ebook_uploader' && <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">Ebook Uploader</span>}
                       {u.unlimitedBoost && <span className="text-xs bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1"><FiZap className="w-3 h-3" /> Unlimited Boost</span>}
@@ -257,7 +256,7 @@ export default function AdminDashboard() {
                   </div>
                   {u.role !== 'admin' && (
                     <div className="flex gap-2 flex-wrap items-center">
-                      {currentUser?.role === 'super_admin' && (
+                      {currentUser?.role === 'admin' && (
                         <select
                           value={u.role}
                           onChange={async (e) => {
@@ -271,8 +270,6 @@ export default function AdminDashboard() {
                         >
                           <option value="user">User</option>
                           <option value="ebook_uploader">Ebook Uploader</option>
-                          <option value="admin">Admin</option>
-                          <option value="super_admin">Super Admin</option>
                         </select>
                       )}
                       {!u.isSellerVerified && (

@@ -32,8 +32,7 @@ exports.protect = async (req, res, next) => {
 }
 
 exports.adminOnly = (req, res, next) => {
-  const allowed = ['admin', 'super_admin']
-  if (!allowed.includes(req.user?.role)) return res.status(403).json({ message: 'Admin access required' })
+  if (!['admin'].includes(req.user?.role)) return res.status(403).json({ message: 'Admin access required' })
   next()
 }
 

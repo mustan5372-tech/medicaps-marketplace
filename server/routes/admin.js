@@ -201,13 +201,12 @@ router.patch('/users/:id/unlimited-boost', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }) }
 })
 
-// PATCH /api/admin/set-role — super_admin only
+// PATCH /api/admin/set-role — admin only, cannot promote to admin
 router.patch('/set-role', async (req, res) => {
   try {
-    if (req.user.role !== 'super_admin') return res.status(403).json({ message: 'Super admin only' })
     const { userId, role } = req.body
-    const allowed = ['user', 'admin', 'ebook_uploader', 'super_admin']
-    if (!allowed.includes(role)) return res.status(400).json({ message: 'Invalid role' })
+    const allowed = ['user', 'ebook_uploader']
+    if (!allowed.includes(role)) return res.status(400).json({ message: 'You can only assign user or ebook_uploader roles' })
     const user = await User.findByIdAndUpdate(userId, { role }, { new: true }).select('name email role')
     if (!user) return res.status(404).json({ message: 'User not found' })
     res.json({ user })
