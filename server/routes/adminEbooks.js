@@ -2,7 +2,7 @@ const router = require('express').Router()
 const Ebook  = require('../models/Ebook')
 const { protect, checkRole } = require('../middleware/auth')
 
-router.use(protect, checkRole(['admin', 'super_admin', 'ebook_uploader']))
+router.use(protect, checkRole(['admin', 'ebook_uploader']))
 
 router.get('/', async (req, res) => {
   const ebooks = await Ebook.find().sort({ createdAt: -1 })
