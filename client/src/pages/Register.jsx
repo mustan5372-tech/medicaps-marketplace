@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+﻿import { useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'
@@ -10,10 +10,12 @@ export default function Register() {
   const [showPass, setShowPass] = useState(false)
   const { register, loading } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
   const handleSubmit = async (e) => {
     e.preventDefault()
     const res = await register(form)
-    if (res.success) { toast.success('Account created!'); navigate('/login') }
+    if (res.success) { toast.success('Account created!'); navigate('/login' + (redirect !== '/' ? '?redirect=' + encodeURIComponent(redirect) : '')) }
     else toast.error(res.message || 'Failed')
   }
   return (
