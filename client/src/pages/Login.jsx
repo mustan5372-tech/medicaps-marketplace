@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'
@@ -13,12 +13,14 @@ export default function Login() {
   const [banMessage, setBanMessage] = useState('')
   const { login, loading } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setBanMessage('')
     const res = await login(form.email, form.password)
-    if (res.success) { toast.success('Welcome back!'); navigate('/') }
+    if (res.success) { toast.success('Welcome back!'); navigate(redirect) }
     else if (res.status === 403 || res.message?.toLowerCase().includes('banned')) {
       setBanMessage(res.message)
     } else {

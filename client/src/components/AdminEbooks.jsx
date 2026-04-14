@@ -68,6 +68,8 @@ function AddModal({ onClose, onSaved }) {
             className="w-full bg-gray-800 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none">
             {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
+          <input value={totalPages} onChange={e => setTotalPages(e.target.value)} placeholder="Total pages (optional)" type="number" min="0"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-indigo-500/50" />
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={isImportant} onChange={e => setIsImportant(e.target.checked)} className="accent-red-500" />
             <span className="text-sm text-white/70">Mark as Important</span>

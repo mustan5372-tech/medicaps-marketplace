@@ -33,3 +33,20 @@ exports.sendPasswordResetEmail = async (email, token) => {
     </div>`,
   })
 }
+
+exports.sendEbookRequestEmail = async ({ bookName, subject, branch, userEmail, userName }) => {
+  await transporter.sendMail({
+    from: `"MediCaps Marketplace" <${process.env.EMAIL_USER}>`,
+    to: 'mustan5372@gmail.com',
+    subject: `📚 New Ebook Request: ${bookName}`,
+    html: `<div style="font-family:sans-serif;max-width:480px;margin:auto">
+      <h2 style="color:#6366f1">New Ebook Request</h2>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:8px;color:#888">Book Name</td><td style="padding:8px;font-weight:600">${bookName}</td></tr>
+        <tr><td style="padding:8px;color:#888">Subject</td><td style="padding:8px">${subject}</td></tr>
+        <tr><td style="padding:8px;color:#888">Branch</td><td style="padding:8px">${branch}</td></tr>
+        <tr><td style="padding:8px;color:#888">Requested By</td><td style="padding:8px">${userName} (${userEmail})</td></tr>
+      </table>
+    </div>`,
+  })
+}
